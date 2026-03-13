@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TikSave — HD Downloader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080808;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: rgba(255,255,255,0.07);
+    --accent: #ff2d55;
+    --accent2: #ff6b6b;
+    --green: #30d158;
+    --blue: #0a84ff;
+    --text: #f5f5f5;
+    --muted: #666;
+    --radius: 20px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -30%; left: -20%;
+    width: 70%; height: 70%;
+    background: radial-gradient(circle, rgba(255,45,85,0.12) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -20%; right: -20%;
+    width: 60%; height: 60%;
+    background: radial-gradient(circle, rgba(10,132,255,0.08) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .container {
+    position: relative; z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+    animation: fadeDown 0.6s ease both;
+  }
+  .logo-mark {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #ff2d55, #ff6b00);
+    border-radius: 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(255,45,85,0.35);
+  }
+  .logo-mark svg { width: 32px; height: 32px; fill: white; }
+  .header h1 {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff 30%, #888);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p {
+    font-size: 14px; color: var(--muted); margin-top: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Input card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px; margin-bottom: 16px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .card-label {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); margin-bottom: 12px;
+  }
+  .input-row { display: flex; gap: 10px; align-items: stretch; }
+  .url-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    outline: none; transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  .url-input:focus { border-color: rgba(255,45,85,0.4); }
+  .url-input::placeholder { color: var(--muted); }
+  .paste-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0 16px;
+    color: var(--accent);
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.15s; -webkit-appearance: none;
+  }
+  .paste-btn:active { transform: scale(0.96); background: rgba(255,45,85,0.1); }
+  .fetch-btn {
+    width: 100%; margin-top: 14px;
+    background: linear-gradient(135deg, #ff2d55, #ff6b00);
+    border: none; border-radius: 14px;
+    padding: 16px;
+    color: white;
+    font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+    cursor: pointer; letter-spacing: 0.3px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(255,45,85,0.3);
+    -webkit-appearance: none;
+  }
+  .fetch-btn:active { transform: scale(0.98); }
+  .fetch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Status */
+  .status {
+    display: none; text-align: center;
+    padding: 20px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  .status p { color: var(--muted); font-size: 14px; }
+
+  /* Result */
+  .result-card { display: none; animation: fadeUp 0.5s ease both; }
+  .video-info {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden; margin-bottom: 12px;
+  }
+  .thumb-wrap {
+    position: relative; width: 100%;
+    aspect-ratio: 9/16; background: #000;
+    overflow: hidden; max-height: 320px;
+  }
+  .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+  .thumb-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%);
+    display: flex; align-items: flex-end; padding: 20px;
+  }
+  .vid-title { font-size: 14px; font-weight: 700; line-height: 1.4; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+  .vid-author { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 4px; font-family: 'DM Mono', monospace; }
+  .vid-meta {
+    padding: 16px 20px; display: flex; gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .meta-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+  .meta-pill svg { width: 14px; height: 14px; opacity: 0.6; }
+  .meta-pill span { color: var(--text); font-weight: 500; }
+
+  .download-section { padding: 16px 20px; }
+  .dl-label {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); margin-bottom: 10px;
+  }
+
+  /* Download buttons */
+  .dl-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; margin-bottom: 8px;
+    transition: all 0.2s;
+    -webkit-appearance: none;
+    overflow: hidden;
+    position: relative;
+  }
+  .dl-btn.primary {
+    background: linear-gradient(135deg, rgba(255,45,85,0.15), rgba(255,107,0,0.1));
+    border-color: rgba(255,45,85,0.25);
+    color: var(--accent2);
+  }
+  .dl-btn:active { transform: scale(0.98); }
+  .dl-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .dl-btn .badge {
+    font-size: 11px; font-family: 'DM Mono', monospace; font-weight: 500;
+    background: rgba(255,255,255,0.08);
+    border-radius: 6px; padding: 3px 8px;
+    color: var(--muted); white-space: nowrap; flex-shrink: 0;
+  }
+  .dl-btn.primary .badge { background: rgba(255,45,85,0.15); color: var(--accent); }
+
+  /* Progress bar that fills behind button content */
+  .dl-btn .progress-bg {
+    position: absolute; top: 0; left: 0; height: 100%;
+    width: 0%;
+    background: rgba(255,255,255,0.04);
+    transition: width 0.25s ease;
+    z-index: 0;
+  }
+  .dl-btn.primary .progress-bg { background: rgba(255,45,85,0.07); }
+  .dl-btn .btn-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 10px; }
+
+  /* Error */
+  .error-box {
+    display: none;
+    background: rgba(255,45,85,0.07);
+    border: 1px solid rgba(255,45,85,0.2);
+    border-radius: 14px; padding: 16px 20px;
+    margin-bottom: 16px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .error-box p { font-size: 14px; color: #ff6b6b; }
+
+  /* Toast */
+  .toast-bar {
+    display: none;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-top: 8px;
+    text-align: center;
+    animation: fadeUp 0.3s ease both;
+    line-height: 1.5;
+    font-family: 'DM Mono', monospace;
+  }
+  .toast-bar.success { background: rgba(48,209,88,0.1); border: 1px solid rgba(48,209,88,0.2); color: var(--green); }
+  .toast-bar.info    { background: rgba(10,132,255,0.08); border: 1px solid rgba(10,132,255,0.2); color: #6eb3ff; }
+  .toast-bar.warn    { background: rgba(255,159,10,0.08); border: 1px solid rgba(255,159,10,0.2); color: #ffb340; }
+
+  /* iOS Modal */
+  .ios-modal {
+    display: none;
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.97);
+    flex-direction: column;
+    padding: env(safe-area-inset-top,16px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,16px) env(safe-area-inset-left,0);
+  }
+  .ios-modal.open { display: flex; animation: fadeIn 0.25s ease both; }
+  .ios-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 10px; flex-shrink: 0;
+  }
+  .ios-modal-title { font-size: 17px; font-weight: 800; }
+  .ios-close-btn {
+    width: 34px; height: 34px;
+    background: rgba(255,255,255,0.1);
+    border: none; border-radius: 50%;
+    color: var(--text); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-appearance: none; line-height: 1; flex-shrink: 0;
+  }
+
+  /* iOS loading */
+  .ios-loading {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px; padding: 20px;
+  }
+  .ios-spinner {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .ios-loading p { color: var(--muted); font-size: 14px; font-family: 'DM Mono', monospace; }
+  .ios-load-track {
+    width: 200px; height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px; overflow: hidden;
+  }
+  .ios-load-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #ff2d55, #ff6b00);
+    border-radius: 4px; transition: width 0.25s ease;
+  }
+
+  /* iOS ready state */
+  .ios-ready { display: flex; flex-direction: column; min-height: 0; }
+  .ios-video-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 8px 20px; overflow: hidden; min-height: 0;
+  }
+  .ios-video-wrap video {
+    max-width: 100%; max-height: 100%;
+    border-radius: 14px; background: #000;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6); display: block;
+  }
+  .ios-save-hint {
+    flex-shrink: 0;
+    margin: 10px 16px 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px;
+    padding: 14px 16px;
+  }
+
+  /* Big share button */
+  .ios-share-btn {
+    width: 100%; margin-bottom: 14px;
+    background: linear-gradient(135deg, #0a84ff, #0060df);
+    border: none; border-radius: 14px;
+    padding: 14px 20px;
+    color: white;
+    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800;
+    cursor: pointer; -webkit-appearance: none;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 4px 20px rgba(10,132,255,0.3);
+    transition: all 0.15s;
+  }
+  .ios-share-btn:active { transform: scale(0.98); }
+
+  .ios-divider {
+    text-align: center; font-size: 11px; color: var(--muted);
+    font-family: 'DM Mono', monospace; margin-bottom: 12px;
+    position: relative;
+  }
+  .ios-divider::before, .ios-divider::after {
+    content: ''; position: absolute; top: 50%;
+    width: 28%; height: 1px; background: var(--border);
+  }
+  .ios-divider::before { left: 0; }
+  .ios-divider::after  { right: 0; }
+
+  .ios-steps { display: flex; flex-direction: column; gap: 8px; }
+  .ios-step-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: rgba(255,255,255,0.6);
+    font-family: 'DM Mono', monospace;
+  }
+  .ios-step-num {
+    width: 20px; height: 20px; border-radius: 6px;
+    background: rgba(255,45,85,0.2); color: var(--accent);
+    font-size: 10px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-family: 'Syne', sans-serif;
+  }
+
+  /* PC success overlay */
+  .pc-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.8);
+    align-items: center; justify-content: center;
+  }
+  .pc-overlay.open { display: flex; animation: fadeIn 0.25s ease both; }
+  .pc-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 36px 28px;
+    text-align: center;
+    max-width: 320px; width: 90%;
+    animation: scaleIn 0.3s ease both;
+  }
+  .pc-icon {
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, rgba(48,209,88,0.15), rgba(48,209,88,0.05));
+    border: 1px solid rgba(48,209,88,0.3);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px; font-size: 26px;
+  }
+  .pc-box h3 { font-size: 19px; font-weight: 800; margin-bottom: 8px; }
+  .pc-box p { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; line-height: 1.65; }
+  .pc-close-btn {
+    margin-top: 22px; width: 100%;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px;
+    color: var(--text); font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; -webkit-appearance: none;
+    transition: all 0.15s;
+  }
+  .pc-close-btn:hover { background: rgba(255,255,255,0.06); }
+
+  /* Instructions */
+  .instructions {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px; margin-top: 16px;
+    animation: fadeUp 0.7s ease both;
+  }
+  .instructions h2 {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); margin-bottom: 16px;
+  }
+  .step { display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .step:last-child { margin-bottom: 0; }
+  .step-num {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #ff2d55, #ff6b00);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: white;
+  }
+  .step-text { padding-top: 3px; }
+  .step-text strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .step-text p { font-size: 13px; color: var(--muted); line-height: 1.5; font-family: 'DM Mono', monospace; }
+  .platform-note {
+    margin-top: 16px; padding: 14px 16px;
+    background: var(--surface2); border-radius: 12px;
+  }
+  .note-row {
+    display: flex; gap: 10px;
+    font-size: 12px; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 8px; line-height: 1.5; align-items: flex-start;
+  }
+  .note-row:last-child { margin-bottom: 0; }
+  .note-label { font-weight: 700; color: rgba(255,255,255,0.35); white-space: nowrap; flex-shrink: 0; }
+
+  /* Animations */
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(16px);  } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn   { from { opacity:0; }                              to { opacity:1; } }
+  @keyframes scaleIn  { from { opacity:0; transform:scale(0.92); }      to { opacity:1; transform:scale(1); } }
+  @keyframes spin     { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- iOS Video Modal -->
+<div class="ios-modal" id="iosModal">
+  <div class="ios-modal-header">
+    <span class="ios-modal-title">Save to Photos</span>
+    <button class="ios-close-btn" id="iosClose">✕</button>
+  </div>
+
+  <!-- Loading state -->
+  <div class="ios-loading" id="iosLoading">
+    <div class="ios-spinner"></div>
+    <p id="iosLoadingMsg">Preparing video…</p>
+    <div class="ios-load-track"><div class="ios-load-fill" id="iosLoadFill"></div></div>
+  </div>
+
+  <!-- Video + save UI -->
+  <div class="ios-ready" id="iosReady" style="display:none; flex:1; flex-direction:column; min-height:0;">
+    <div class="ios-video-wrap">
+      <video id="iosVideo" playsinline controls preload="auto" webkit-playsinline></video>
+    </div>
+    <div class="ios-save-hint">
+      <button class="ios-share-btn" id="iosShareBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+        Share / Save to Photos
+      </button>
+      <div class="ios-divider">or hold your finger on the video above</div>
+      <div class="ios-steps">
+        <div class="ios-step-row"><div class="ios-step-num">1</div>Long-press the video → "Save to Photos"</div>
+        <div class="ios-step-row"><div class="ios-step-num">2</div>Or tap "Share / Save" button above</div>
+        <div class="ios-step-row"><div class="ios-step-num">3</div>In the Share sheet tap "Save Video"</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PC Success Overlay -->
+<div class="pc-overlay" id="pcOverlay">
+  <div class="pc-box">
+    <div class="pc-icon">✓</div>
+    <h3>Download started!</h3>
+    <p>The video is downloading to your <strong>Downloads</strong> folder. Check your browser's download bar.</p>
+    <button class="pc-close-btn" id="pcClose">Got it</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.5a8.27 8.27 0 0 0 4.84 1.55V6.59a4.85 4.85 0 0 1-1.07.1z"/></svg>
+    </div>
+    <h1>TikSave</h1>
+    <p>no watermark · full HD · with sound</p>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Paste TikTok Link</div>
+    <div class="input-row">
+      <input type="url" class="url-input" id="urlInput"
+        placeholder="https://www.tiktok.com/..."
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="paste-btn" id="pasteBtn">Paste</button>
+    </div>
+    <button class="fetch-btn" id="fetchBtn">Get Video ↓</button>
+  </div>
+
+  <div class="error-box" id="errorBox"><p id="errorMsg"></p></div>
+
+  <div class="status" id="status">
+    <div class="spinner"></div>
+    <p id="statusMsg">Fetching video info…</p>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="video-info">
+      <div class="thumb-wrap">
+        <img id="thumbnail" src="" alt="">
+        <div class="thumb-overlay">
+          <div>
+            <div class="vid-title" id="vidTitle"></div>
+            <div class="vid-author" id="vidAuthor"></div>
+          </div>
+        </div>
+      </div>
+      <div class="vid-meta">
+        <div class="meta-pill">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
+          <span id="viewCount">—</span>
+        </div>
+        <div class="meta-pill">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          <span id="likeCount">—</span>
+        </div>
+        <div class="meta-pill">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 18H5V9h14v11z"/></svg>
+          <span id="duration">—</span>
+        </div>
+      </div>
+      <div class="download-section">
+        <div class="dl-label" id="dlSectionLabel">Download</div>
+        <button class="dl-btn primary" id="dlHD" disabled>
+          <div class="progress-bg" id="hdProg"></div>
+          <div class="btn-content">
+            <span id="dlHDText">HD Video + Sound</span>
+            <span class="badge" id="dlHDBadge">Full HD</span>
+          </div>
+        </button>
+        <button class="dl-btn" id="dlSD" disabled>
+          <div class="progress-bg" id="sdProg"></div>
+          <div class="btn-content">
+            <span id="dlSDText">Standard Quality</span>
+            <span class="badge">SD</span>
+          </div>
+        </button>
+        <div class="toast-bar" id="toastBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <h2>How to Use</h2>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <strong>Copy the TikTok link</strong>
+        <p>Open TikTok → tap Share → "Copy link"</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <strong>Paste it here</strong>
+        <p>Tap "Paste" or long-press the input field</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <strong>Tap "Get Video"</strong>
+        <p>The app fetches the video and shows quality options</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text">
+        <strong>Save it</strong>
+        <p>iPhone: video opens in a player — hold it → Save to Photos<br>PC/Mac: file downloads automatically to your folder</p>
+      </div>
+    </div>
+    <div class="platform-note">
+      <div class="note-row"><span class="note-label">📱 iPhone</span><span>Open in Safari · A video player appears · Hold finger on video → "Save to Photos"</span></div>
+      <div class="note-row"><span class="note-label">💻 PC/Mac</span><span>File downloads automatically with progress bar. If blocked, right-click the video → "Save As"</span></div>
+      <div class="note-row"><span class="note-label">🤖 Android</span><span>File downloads to your Downloads folder automatically</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  const urlInput   = document.getElementById('urlInput');
+  const pasteBtn   = document.getElementById('pasteBtn');
+  const fetchBtn   = document.getElementById('fetchBtn');
+  const statusEl   = document.getElementById('status');
+  const statusMsg  = document.getElementById('statusMsg');
+  const resultCard = document.getElementById('resultCard');
+  const errorBox   = document.getElementById('errorBox');
+  const errorMsg   = document.getElementById('errorMsg');
+  const toastBar   = document.getElementById('toastBar');
+  const dlHD       = document.getElementById('dlHD');
+  const dlSD       = document.getElementById('dlSD');
+  const hdProg     = document.getElementById('hdProg');
+  const sdProg     = document.getElementById('sdProg');
+  const iosModal   = document.getElementById('iosModal');
+  const iosVideo   = document.getElementById('iosVideo');
+  const iosLoading = document.getElementById('iosLoading');
+  const iosLoadMsg = document.getElementById('iosLoadingMsg');
+  const iosLoadFill= document.getElementById('iosLoadFill');
+  const iosReady   = document.getElementById('iosReady');
+  const pcOverlay  = document.getElementById('pcOverlay');
+
+  let currentBlob = null; // keep reference for share API
+
+  let hdUrl = '', sdUrl = '', videoTitle = 'tiktok-video';
+
+  /* Paste */
+  pasteBtn.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      urlInput.value = text;
+    } catch {
+      urlInput.focus();
+      try { document.execCommand('paste'); } catch {}
+    }
+  });
+
+  /* Utils */
+  const show = el => el.style.display = 'block';
+  const hide = el => el.style.display = 'none';
+
+  function formatNumber(n) {
+    if (!n) return '—';
+    if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+    if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+    return String(n);
+  }
+  function formatDuration(s) {
+    if (!s) return '—';
+    return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+  }
+  function toast(msg, type='success') {
+    toastBar.textContent = msg;
+    toastBar.className = 'toast-bar '+type;
+    show(toastBar);
+  }
+  function setBarWidth(el, pct) {
+    el.style.width = pct + '%';
+  }
+
+  /* Fetch video info */
+  fetchBtn.addEventListener('click', async () => {
+    const url = urlInput.value.trim();
+    if (!url) { showErr('Please paste a TikTok link first.'); return; }
+    if (!url.includes('tiktok.com') && !url.includes('vm.tiktok') && !url.includes('vt.tiktok')) {
+      showErr("This doesn't look like a TikTok link. Please check and try again.");
+      return;
+    }
+
+    hide(errorBox); hide(resultCard); hide(toastBar);
+    show(statusEl); statusMsg.textContent = 'Fetching video info…';
+    fetchBtn.disabled = true;
+    dlHD.disabled = dlSD.disabled = true;
+
+    try {
+      const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(url)}&hd=1`;
+      const res  = await fetch(apiUrl);
+      const data = await res.json();
+
+      if (!data || data.code !== 0 || !data.data)
+        throw new Error(data?.msg || 'Could not fetch video. Please try again.');
+
+      const v = data.data;
+      videoTitle = (v.title||'tiktok-video').slice(0,60).replace(/[^\w\s-]/g,'').trim()||'tiktok-video';
+
+      document.getElementById('thumbnail').src            = v.cover||v.origin_cover||'';
+      document.getElementById('vidTitle').textContent     = v.title||'TikTok Video';
+      document.getElementById('vidAuthor').textContent    = '@'+(v.author?.unique_id||'unknown');
+      document.getElementById('viewCount').textContent    = formatNumber(v.play_count||v.views);
+      document.getElementById('likeCount').textContent    = formatNumber(v.digg_count||v.likes);
+      document.getElementById('duration').textContent     = formatDuration(v.duration);
+
+      hdUrl = v.hdplay || v.play || v.wmplay || '';
+      sdUrl = v.play   || v.wmplay || '';
+
+      if (isIOS) {
+        document.getElementById('dlHDText').textContent      = '📲  Save HD to Photos';
+        document.getElementById('dlSDText').textContent      = '📲  Save SD to Photos';
+        document.getElementById('dlHDBadge').textContent     = 'Full HD';
+        document.getElementById('dlSectionLabel').textContent = 'Save to Camera Roll';
+      } else {
+        document.getElementById('dlHDText').textContent      = '⬇  Download HD Video';
+        document.getElementById('dlSDText').textContent      = '⬇  Download SD Video';
+        document.getElementById('dlSectionLabel').textContent = 'Download';
+      }
+
+      dlHD.disabled = !hdUrl;
+      dlSD.disabled = !sdUrl;
+
+      hide(statusEl);
+      show(resultCard);
+      toast(
+        isIOS
+          ? '✓ Ready — tap above to open the video and save it to Photos'
+          : '✓ Ready — tap to download the file to your computer',
+        isIOS ? 'info' : 'success'
+      );
+      resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch(err) {
+      hide(statusEl);
+      showErr(err.message || 'Failed to fetch video. Please try a different link.');
+    }
+    fetchBtn.disabled = false;
+  });
+
+  /* ── Audio delay fix ──────────────────────────────────────────────────────
+   * TikTok bakes delays into MP4 edit list (elst) boxes in two distinct ways:
+   *
+   *  Pattern A — media_time = -N  (negative decode offset, N != -1)
+   *    The player starts decoding N time-units into the track, so audio
+   *    appears late relative to video.
+   *    Fix: set media_time to 0.
+   *
+   *  Pattern B — media_time = -1  (the "empty edit" sentinel in ISO 14496-12)
+   *    Creates a silent gap lasting exactly segment_duration before content.
+   *    Zeroing media_time here would corrupt the entry.
+   *    Fix: set segment_duration to 0, collapsing the silent gap.
+   *
+   * Both patterns can appear in the same file on different tracks.
+   * No re-encoding, no quality loss — only the metadata bytes change.
+   * ───────────────────────────────────────────────────────────────────────── */
+  function fixAudioDelay(srcBuffer) {
+    const buf  = srcBuffer.slice(0);
+    const u8   = new Uint8Array(buf);
+    const view = new DataView(buf);
+
+    for (let i = 4; i < u8.length - 4; i++) {
+      if (u8[i]   !== 0x65 || u8[i+1] !== 0x6C ||
+          u8[i+2] !== 0x73 || u8[i+3] !== 0x74) continue;
+
+      const version    = u8[i + 4];
+      const entryCount = view.getUint32(i + 8, false);
+      let   ptr        = i + 12;
+
+      for (let e = 0; e < entryCount; e++) {
+        if (version === 1) {
+          // v1 entry = 20 bytes
+          // segment_duration uint64 @ ptr+0, media_time int64 @ ptr+8
+          const mtHi = view.getInt32(ptr + 8,  false);
+          const mtLo = view.getUint32(ptr + 12, false);
+          const isEmptyEdit = (mtHi === -1 && mtLo === 0xFFFFFFFF);
+
+          if (isEmptyEdit) {
+            // Pattern B: collapse the silent gap
+            view.setUint32(ptr + 0, 0, false);
+            view.setUint32(ptr + 4, 0, false);
+          } else if (mtHi < 0) {
+            // Pattern A: remove the negative decode offset
+            view.setInt32(ptr + 8,  0, false);
+            view.setUint32(ptr + 12, 0, false);
+          }
+          ptr += 20;
+        } else {
+          // v0 entry = 12 bytes
+          // segment_duration uint32 @ ptr+0, media_time int32 @ ptr+4
+          const mt = view.getInt32(ptr + 4, false);
+
+          if (mt === -1) {
+            // Pattern B: collapse the silent gap
+            view.setUint32(ptr + 0, 0, false);
+          } else if (mt < 0) {
+            // Pattern A: remove the negative decode offset
+            view.setInt32(ptr + 4, 0, false);
+          }
+          ptr += 12;
+        }
+      }
+    }
+
+    return buf;
+  }
+
+  /* Helper: fetch with streaming progress, then fix audio, return blob */
+  async function fetchAndFix(url, onProgress) {
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) throw new Error('Fetch failed: ' + response.status);
+
+    const contentLength = +response.headers.get('content-length') || 0;
+    const reader = response.body.getReader();
+    const chunks = [];
+    let loaded = 0;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      loaded += value.length;
+      const pct = contentLength
+        ? Math.min(88, (loaded / contentLength) * 100)
+        : Math.min(80, 5 + loaded / 70000);
+      onProgress(pct);
+    }
+
+    onProgress(92);
+
+    // Assemble chunks → fix audio delay → return blob
+    const totalLen = chunks.reduce((s, c) => s + c.length, 0);
+    const merged   = new Uint8Array(totalLen);
+    let   offset   = 0;
+    for (const c of chunks) { merged.set(c, offset); offset += c.length; }
+
+    const fixed = fixAudioDelay(merged.buffer);
+    onProgress(100);
+    return new Blob([fixed], { type: 'video/mp4' });
+  }
+
+  /* Button clicks */
+  dlHD.addEventListener('click', () => startDownload(hdUrl, 'hd', hdProg, dlHD));
+  dlSD.addEventListener('click', () => startDownload(sdUrl, 'sd', sdProg, dlSD));
+
+  async function startDownload(url, quality, progressEl, btn) {
+    if (!url) return;
+
+    if (isIOS) {
+      /* iOS: fetch blob first so Safari allows "Save to Photos" on long-press */
+      btn.disabled = true;
+      iosLoading.style.display = 'flex';
+      iosReady.style.display   = 'none';
+      iosModal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      currentBlob = null;
+
+      try {
+        iosLoadMsg.textContent = 'Downloading video…';
+        iosLoadFill.style.width = '5%';
+
+        currentBlob = await fetchAndFix(url, pct => {
+          iosLoadFill.style.width = pct + '%';
+          if (pct >= 92) iosLoadMsg.textContent = 'Fixing audio sync…';
+        });
+
+        const blobUrl = URL.createObjectURL(currentBlob);
+
+        iosVideo.src = blobUrl;
+        iosVideo.load();
+        iosVideo.play().catch(()=>{});
+
+        iosLoading.style.display = 'none';
+        iosReady.style.display   = 'flex';
+
+      } catch (err) {
+        /* Fallback: set src directly (cross-origin — long-press may not work) */
+        console.warn('Blob fetch failed on iOS, using direct URL:', err);
+        iosVideo.src = url;
+        iosVideo.load();
+        iosVideo.play().catch(()=>{});
+        iosLoading.style.display = 'none';
+        iosReady.style.display   = 'flex';
+        iosLoadMsg.textContent   = 'Tip: use the Share button below if long-press does not work.';
+      }
+
+      btn.disabled = false;
+
+    } else {
+      /* PC/Android: fetch as blob → auto download */
+      btn.disabled = true;
+      setBarWidth(progressEl, 8);
+
+      try {
+        const blob = await fetchAndFix(url, pct => {
+          setBarWidth(progressEl, pct);
+        });
+
+        setBarWidth(progressEl, 100);
+
+        const blobUrl = URL.createObjectURL(blob);
+        const a       = document.createElement('a');
+        a.href     = blobUrl;
+        a.download = `${videoTitle}_${quality}.mp4`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+
+        pcOverlay.classList.add('open');
+
+      } catch (err) {
+        /* CORS blocked — open directly in new tab as fallback */
+        console.warn('Blob fetch failed, falling back to direct link:', err);
+        window.open(url, '_blank');
+        toast('⚠ Browser blocked direct download — right-click the video and choose "Save video as…"', 'warn');
+      }
+
+      setTimeout(() => {
+        setBarWidth(progressEl, 0);
+        btn.disabled = false;
+      }, 900);
+    }
+  }
+
+  /* iOS Share button */
+  document.getElementById('iosShareBtn').addEventListener('click', async () => {
+    const file = currentBlob
+      ? new File([currentBlob], `${videoTitle}.mp4`, { type: 'video/mp4' })
+      : null;
+
+    try {
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: videoTitle });
+      } else if (navigator.share) {
+        await navigator.share({ title: videoTitle, url: iosVideo.src });
+      } else {
+        alert('Sharing not supported in this browser. Please long-press the video instead.');
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') console.warn('Share failed:', err);
+    }
+  });
+
+  /* Close iOS modal */
+  document.getElementById('iosClose').addEventListener('click', () => {
+    iosModal.classList.remove('open');
+    iosVideo.pause(); iosVideo.src = '';
+    iosLoading.style.display = 'flex';
+    iosReady.style.display   = 'none';
+    iosLoadFill.style.width  = '0%';
+    iosLoadMsg.textContent   = 'Preparing video…';
+    if (currentBlob) { URL.revokeObjectURL(URL.createObjectURL(currentBlob)); currentBlob = null; }
+    document.body.style.overflow = '';
+  });
+  document.getElementById('pcClose').addEventListener('click', () => {
+    pcOverlay.classList.remove('open');
+  });
+
+  function showErr(msg) {
+    errorMsg.textContent = msg;
+    show(errorBox);
+  }
+
+  urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') fetchBtn.click(); });
+</script>
+</body>
+</html>
