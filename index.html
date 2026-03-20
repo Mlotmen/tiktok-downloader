@@ -496,6 +496,9 @@ body::after {
           </div>
         </button>
 
+        <div class="hevc-warn" id="hevcWarn">
+          ⚠ This video's HD stream uses HEVC (H.265) which your device may not support. Use <strong>Standard Quality</strong> below for guaranteed compatibility.
+        </div>
         <button class="dl-btn" id="dlSD" disabled>
           <div class="progress-bg" id="sdProg"></div>
           <div class="btn-content">
@@ -718,6 +721,32 @@ async function doFetch() {
     hdUrl    = v.hdplay || v.play || v.wmplay || '';
     sdUrl    = v.play   || v.wmplay || '';
     audioUrl = v.music  || v.music_info?.play || '';
+
+    /* ── HEVC compatibility check ──────────────────────────────────────────
+     * If the HD stream is a different URL from SD it is likely HEVC/H.265.
+     * Test the browser's canPlayType for hvc1; warn the user if unsupported.
+     * ─────────────────────────────────────────────────────────────────────── */
+    const hevcWarn = document.getElementById('hevcWarn');
+    const hdIsHevc = hdUrl && sdUrl && hdUrl !== sdUrl; // different URL = likely HEVC
+    if (hdIsHevc) {
+      const testVid = document.createElement('video');
+      const hevcSupported = testVid.canPlayType('video/mp4; codecs="hvc1"') !== ''
+                         || testVid.canPlayType('video/mp4; codecs="hev1"') !== '';
+      if (!hevcSupported) {
+        hevcWarn.style.display = 'block';
+        // Visually de-emphasise the HD button to nudge user toward SD
+        dlHD.style.opacity = '0.55';
+        dlHD.style.filter  = 'saturate(0.4)';
+      } else {
+        hevcWarn.style.display = 'none';
+        dlHD.style.opacity = '';
+        dlHD.style.filter  = '';
+      }
+    } else {
+      hevcWarn.style.display = 'none';
+      dlHD.style.opacity = '';
+      dlHD.style.filter  = '';
+    }
 
     /* ── Slideshow (photo carousel) detection ── */
     const images = v.images || v.image_post_info?.images?.map(i => i.display_image?.url_list?.[0]).filter(Boolean) || [];
