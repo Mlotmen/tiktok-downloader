@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,6 +7,7 @@
 <title>TikSave — HD Downloader</title>
 
 <!-- PWA -->
+
 <meta name="theme-color" content="#080808">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -46,175 +48,175 @@ body::after {
 /* ── Header ── */
 .header { text-align:center; margin-bottom:32px; animation:fadeDown .6s ease both; }
 .logo-mark {
-  display:inline-flex; align-items:center; justify-content:center;
-  width:64px; height:64px;
-  background:linear-gradient(135deg,#ff2d55,#ff6b00);
-  border-radius:18px; margin-bottom:16px;
-  box-shadow:0 8px 32px rgba(255,45,85,.35);
+display:inline-flex; align-items:center; justify-content:center;
+width:64px; height:64px;
+background:linear-gradient(135deg,#ff2d55,#ff6b00);
+border-radius:18px; margin-bottom:16px;
+box-shadow:0 8px 32px rgba(255,45,85,.35);
 }
 .logo-mark svg { width:32px; height:32px; fill:white; }
 .header h1 {
-  font-size:28px; font-weight:800; letter-spacing:-.5px;
-  background:linear-gradient(135deg,#fff 30%,#888);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+font-size:28px; font-weight:800; letter-spacing:-.5px;
+background:linear-gradient(135deg,#fff 30%,#888);
+-webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
 }
-.header p { font-size:14px; color:var(--muted); margin-top:6px; font-family:'DM Mono',monospace; }
+.header p { font-size:14px; color:var(–muted); margin-top:6px; font-family:‘DM Mono’,monospace; }
 .version-badge {
-  display:inline-block; margin-top:10px;
-  font-size:10px; font-family:'DM Mono',monospace; font-weight:500;
-  color:rgba(255,255,255,.2); background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.08); border-radius:20px;
-  padding:3px 10px; letter-spacing:1px;
+display:inline-block; margin-top:10px;
+font-size:10px; font-family:‘DM Mono’,monospace; font-weight:500;
+color:rgba(255,255,255,.2); background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.08); border-radius:20px;
+padding:3px 10px; letter-spacing:1px;
 }
 
 /* ── Card / Input ── */
 .card {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); padding:20px; margin-bottom:16px;
-  animation:fadeUp .6s ease both;
+background:var(–surface); border:1px solid var(–border);
+border-radius:var(–radius); padding:20px; margin-bottom:16px;
+animation:fadeUp .6s ease both;
 }
-.card-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:12px; }
+.card-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(–muted); margin-bottom:12px; }
 .input-row { display:flex; gap:10px; align-items:stretch; }
 .url-input {
-  flex:1; background:var(--surface2); border:1px solid var(--border);
-  border-radius:12px; padding:14px 16px; color:var(--text);
-  font-family:'DM Mono',monospace; font-size:13px; outline:none;
-  transition:border-color .2s; -webkit-appearance:none;
+flex:1; background:var(–surface2); border:1px solid var(–border);
+border-radius:12px; padding:14px 16px; color:var(–text);
+font-family:‘DM Mono’,monospace; font-size:13px; outline:none;
+transition:border-color .2s; -webkit-appearance:none;
 }
 .url-input:focus { border-color:rgba(255,45,85,.4); }
-.url-input::placeholder { color:var(--muted); }
+.url-input::placeholder { color:var(–muted); }
 .paste-btn {
-  background:var(--surface2); border:1px solid var(--border); border-radius:12px;
-  padding:0 16px; color:var(--accent);
-  font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
-  cursor:pointer; white-space:nowrap; transition:all .15s; -webkit-appearance:none;
+background:var(–surface2); border:1px solid var(–border); border-radius:12px;
+padding:0 16px; color:var(–accent);
+font-family:‘Syne’,sans-serif; font-size:13px; font-weight:700;
+cursor:pointer; white-space:nowrap; transition:all .15s; -webkit-appearance:none;
 }
 .paste-btn:active { transform:scale(.96); background:rgba(255,45,85,.1); }
 .fetch-btn {
-  width:100%; margin-top:14px;
-  background:linear-gradient(135deg,#ff2d55,#ff6b00);
-  border:none; border-radius:14px; padding:16px; color:white;
-  font-family:'Syne',sans-serif; font-size:16px; font-weight:800;
-  cursor:pointer; letter-spacing:.3px; transition:all .2s;
-  box-shadow:0 4px 20px rgba(255,45,85,.3); -webkit-appearance:none;
+width:100%; margin-top:14px;
+background:linear-gradient(135deg,#ff2d55,#ff6b00);
+border:none; border-radius:14px; padding:16px; color:white;
+font-family:‘Syne’,sans-serif; font-size:16px; font-weight:800;
+cursor:pointer; letter-spacing:.3px; transition:all .2s;
+box-shadow:0 4px 20px rgba(255,45,85,.3); -webkit-appearance:none;
 }
 .fetch-btn:active { transform:scale(.98); }
 .fetch-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
 /* Clipboard hint */
 .clipboard-hint {
-  display:none; margin-top:10px; padding:10px 14px;
-  background:rgba(255,45,85,.07); border:1px solid rgba(255,45,85,.18);
-  border-radius:10px; font-size:12px; color:rgba(255,150,150,.9);
-  font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s;
+display:none; margin-top:10px; padding:10px 14px;
+background:rgba(255,45,85,.07); border:1px solid rgba(255,45,85,.18);
+border-radius:10px; font-size:12px; color:rgba(255,150,150,.9);
+font-family:‘DM Mono’,monospace; cursor:pointer; transition:all .15s;
 }
 .clipboard-hint:active { background:rgba(255,45,85,.12); }
 
 /* ── Status ── */
 .status { display:none; text-align:center; padding:20px; animation:fadeUp .4s ease both; }
 .spinner {
-  width:36px; height:36px;
-  border:3px solid var(--border); border-top-color:var(--accent);
-  border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px;
+width:36px; height:36px;
+border:3px solid var(–border); border-top-color:var(–accent);
+border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px;
 }
-.status p { color:var(--muted); font-size:14px; }
+.status p { color:var(–muted); font-size:14px; }
 
 /* ── Error ── */
 .error-box {
-  display:none; background:rgba(255,45,85,.07); border:1px solid rgba(255,45,85,.2);
-  border-radius:14px; padding:16px 20px; margin-bottom:16px;
-  animation:fadeUp .4s ease both;
+display:none; background:rgba(255,45,85,.07); border:1px solid rgba(255,45,85,.2);
+border-radius:14px; padding:16px 20px; margin-bottom:16px;
+animation:fadeUp .4s ease both;
 }
 .error-box p { font-size:14px; color:#ff6b6b; margin-bottom:12px; }
 .retry-btn {
-  background:rgba(255,45,85,.15); border:1px solid rgba(255,45,85,.3);
-  border-radius:10px; padding:9px 18px; color:var(--accent);
-  font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
-  cursor:pointer; -webkit-appearance:none; transition:all .15s;
+background:rgba(255,45,85,.15); border:1px solid rgba(255,45,85,.3);
+border-radius:10px; padding:9px 18px; color:var(–accent);
+font-family:‘Syne’,sans-serif; font-size:13px; font-weight:700;
+cursor:pointer; -webkit-appearance:none; transition:all .15s;
 }
 .retry-btn:active { transform:scale(.97); }
 
 /* ── Result card ── */
 .result-card { display:none; animation:fadeUp .5s ease both; }
 .video-info {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); overflow:hidden; margin-bottom:12px;
+background:var(–surface); border:1px solid var(–border);
+border-radius:var(–radius); overflow:hidden; margin-bottom:12px;
 }
 .thumb-wrap {
-  position:relative; width:100%; aspect-ratio:9/16;
-  background:#000; overflow:hidden; max-height:300px;
+position:relative; width:100%; aspect-ratio:9/16;
+background:#000; overflow:hidden; max-height:300px;
 }
 .thumb-wrap img { width:100%; height:100%; object-fit:cover; opacity:.85; }
 .thumb-overlay {
-  position:absolute; inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 50%);
-  display:flex; align-items:flex-end; padding:20px;
+position:absolute; inset:0;
+background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 50%);
+display:flex; align-items:flex-end; padding:20px;
 }
 .vid-title { font-size:14px; font-weight:700; line-height:1.4; text-shadow:0 1px 4px rgba(0,0,0,.5); }
-.vid-author { font-size:12px; color:rgba(255,255,255,.7); margin-top:4px; font-family:'DM Mono',monospace; }
+.vid-author { font-size:12px; color:rgba(255,255,255,.7); margin-top:4px; font-family:‘DM Mono’,monospace; }
 .vid-meta {
-  padding:14px 20px; display:flex; gap:16px;
-  border-bottom:1px solid var(--border);
+padding:14px 20px; display:flex; gap:16px;
+border-bottom:1px solid var(–border);
 }
-.meta-pill { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; }
+.meta-pill { display:flex; align-items:center; gap:6px; font-size:12px; color:var(–muted); font-family:‘DM Mono’,monospace; }
 .meta-pill svg { width:14px; height:14px; opacity:.6; }
-.meta-pill span { color:var(--text); font-weight:500; }
+.meta-pill span { color:var(–text); font-weight:500; }
 
 /* PC inline video preview */
 .pc-preview {
-  display:none; padding:16px 20px 0;
+display:none; padding:16px 20px 0;
 }
 .pc-preview video {
-  width:100%; border-radius:12px; background:#000;
-  max-height:280px; outline:none;
+width:100%; border-radius:12px; background:#000;
+max-height:280px; outline:none;
 }
-.pc-preview-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:10px; }
+.pc-preview-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(–muted); margin-bottom:10px; }
 
 /* Slideshow grid */
 .slideshow-wrap { display:none; padding:16px 20px 0; }
-.slideshow-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:10px; }
+.slideshow-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(–muted); margin-bottom:10px; }
 .slides-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
 .slide-item { position:relative; aspect-ratio:9/16; border-radius:10px; overflow:hidden; cursor:pointer; }
 .slide-item img { width:100%; height:100%; object-fit:cover; }
 .slide-dl-btn {
-  position:absolute; bottom:6px; right:6px;
-  background:rgba(0,0,0,.7); border:none; border-radius:6px;
-  color:white; font-size:11px; font-weight:700;
-  padding:4px 8px; cursor:pointer; -webkit-appearance:none;
-  font-family:'Syne',sans-serif;
+position:absolute; bottom:6px; right:6px;
+background:rgba(0,0,0,.7); border:none; border-radius:6px;
+color:white; font-size:11px; font-weight:700;
+padding:4px 8px; cursor:pointer; -webkit-appearance:none;
+font-family:‘Syne’,sans-serif;
 }
 
 /* Download section */
 .download-section { padding:16px 20px; }
-.dl-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:10px; }
+.dl-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(–muted); margin-bottom:10px; }
 .dl-btn {
-  display:flex; align-items:center; justify-content:space-between;
-  width:100%; background:var(--surface2); border:1px solid var(--border);
-  border-radius:14px; padding:14px 18px; color:var(--text);
-  font-family:'Syne',sans-serif; font-size:15px; font-weight:700;
-  cursor:pointer; margin-bottom:8px; transition:all .2s;
-  -webkit-appearance:none; overflow:hidden; position:relative;
+display:flex; align-items:center; justify-content:space-between;
+width:100%; background:var(–surface2); border:1px solid var(–border);
+border-radius:14px; padding:14px 18px; color:var(–text);
+font-family:‘Syne’,sans-serif; font-size:15px; font-weight:700;
+cursor:pointer; margin-bottom:8px; transition:all .2s;
+-webkit-appearance:none; overflow:hidden; position:relative;
 }
 .dl-btn.primary {
-  background:linear-gradient(135deg,rgba(255,45,85,.15),rgba(255,107,0,.1));
-  border-color:rgba(255,45,85,.25); color:var(--accent2);
+background:linear-gradient(135deg,rgba(255,45,85,.15),rgba(255,107,0,.1));
+border-color:rgba(255,45,85,.25); color:var(–accent2);
 }
 .dl-btn.audio-btn {
-  background:linear-gradient(135deg,rgba(10,132,255,.12),rgba(10,132,255,.05));
-  border-color:rgba(10,132,255,.25); color:#6eb3ff;
+background:linear-gradient(135deg,rgba(10,132,255,.12),rgba(10,132,255,.05));
+border-color:rgba(10,132,255,.25); color:#6eb3ff;
 }
 .dl-btn:active { transform:scale(.98); }
 .dl-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
 .dl-btn .badge {
-  font-size:11px; font-family:'DM Mono',monospace; font-weight:500;
-  background:rgba(255,255,255,.08); border-radius:6px; padding:3px 8px;
-  color:var(--muted); white-space:nowrap; flex-shrink:0;
+font-size:11px; font-family:‘DM Mono’,monospace; font-weight:500;
+background:rgba(255,255,255,.08); border-radius:6px; padding:3px 8px;
+color:var(–muted); white-space:nowrap; flex-shrink:0;
 }
-.dl-btn.primary .badge { background:rgba(255,45,85,.15); color:var(--accent); }
-.dl-btn.audio-btn .badge { background:rgba(10,132,255,.15); color:var(--blue); }
+.dl-btn.primary .badge { background:rgba(255,45,85,.15); color:var(–accent); }
+.dl-btn.audio-btn .badge { background:rgba(10,132,255,.15); color:var(–blue); }
 .dl-btn .progress-bg {
-  position:absolute; top:0; left:0; height:100%; width:0%;
-  background:rgba(255,255,255,.04); transition:width .25s ease; z-index:0;
+position:absolute; top:0; left:0; height:100%; width:0%;
+background:rgba(255,255,255,.04); transition:width .25s ease; z-index:0;
 }
 .dl-btn.primary .progress-bg { background:rgba(255,45,85,.07); }
 .dl-btn.audio-btn .progress-bg { background:rgba(10,132,255,.07); }
@@ -222,136 +224,136 @@ body::after {
 
 /* Same quality notice */
 .same-quality-note {
-  display:none; font-size:11px; color:var(--muted);
-  font-family:'DM Mono',monospace; text-align:center;
-  margin-top:-4px; margin-bottom:8px; padding:6px 0;
-  opacity:.7;
+display:none; font-size:11px; color:var(–muted);
+font-family:‘DM Mono’,monospace; text-align:center;
+margin-top:-4px; margin-bottom:8px; padding:6px 0;
+opacity:.7;
 }
 
 /* Toast */
 .toast-bar {
-  display:none; border-radius:12px; padding:12px 16px; font-size:13px;
-  margin-top:8px; text-align:center; animation:fadeUp .3s ease both;
-  line-height:1.5; font-family:'DM Mono',monospace;
+display:none; border-radius:12px; padding:12px 16px; font-size:13px;
+margin-top:8px; text-align:center; animation:fadeUp .3s ease both;
+line-height:1.5; font-family:‘DM Mono’,monospace;
 }
-.toast-bar.success { background:rgba(48,209,88,.1); border:1px solid rgba(48,209,88,.2); color:var(--green); }
+.toast-bar.success { background:rgba(48,209,88,.1); border:1px solid rgba(48,209,88,.2); color:var(–green); }
 .toast-bar.info    { background:rgba(10,132,255,.08); border:1px solid rgba(10,132,255,.2); color:#6eb3ff; }
 .toast-bar.warn    { background:rgba(255,159,10,.08); border:1px solid rgba(255,159,10,.2); color:#ffb340; }
 
 /* ── iOS Modal ── */
 .ios-modal {
-  display:none; position:fixed; inset:0; z-index:200;
-  background:rgba(0,0,0,.97); flex-direction:column;
-  padding:env(safe-area-inset-top,16px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,16px) env(safe-area-inset-left,0);
+display:none; position:fixed; inset:0; z-index:200;
+background:rgba(0,0,0,.97); flex-direction:column;
+padding:env(safe-area-inset-top,16px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,16px) env(safe-area-inset-left,0);
 }
 .ios-modal.open { display:flex; animation:fadeIn .25s ease both; }
 .ios-modal-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:16px 20px 10px; flex-shrink:0;
+display:flex; align-items:center; justify-content:space-between;
+padding:16px 20px 10px; flex-shrink:0;
 }
 .ios-modal-title { font-size:17px; font-weight:800; }
 .ios-close-btn {
-  width:34px; height:34px; background:rgba(255,255,255,.1);
-  border:none; border-radius:50%; color:var(--text); font-size:16px;
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; -webkit-appearance:none; line-height:1; flex-shrink:0;
+width:34px; height:34px; background:rgba(255,255,255,.1);
+border:none; border-radius:50%; color:var(–text); font-size:16px;
+display:flex; align-items:center; justify-content:center;
+cursor:pointer; -webkit-appearance:none; line-height:1; flex-shrink:0;
 }
 .ios-loading { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px; }
-.ios-spinner { width:44px; height:44px; border:3px solid rgba(255,255,255,.1); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
-.ios-loading p { color:var(--muted); font-size:14px; font-family:'DM Mono',monospace; }
+.ios-spinner { width:44px; height:44px; border:3px solid rgba(255,255,255,.1); border-top-color:var(–accent); border-radius:50%; animation:spin .8s linear infinite; }
+.ios-loading p { color:var(–muted); font-size:14px; font-family:‘DM Mono’,monospace; }
 .ios-load-track { width:200px; height:4px; background:rgba(255,255,255,.08); border-radius:4px; overflow:hidden; }
 .ios-load-fill { height:100%; width:0%; background:linear-gradient(90deg,#ff2d55,#ff6b00); border-radius:4px; transition:width .25s ease; }
 .ios-ready { display:flex; flex-direction:column; min-height:0; }
 .ios-video-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:8px 20px; overflow:hidden; min-height:0; }
 .ios-video-wrap video { max-width:100%; max-height:100%; border-radius:14px; background:#000; box-shadow:0 8px 40px rgba(0,0,0,.6); display:block; }
 .ios-save-hint {
-  flex-shrink:0; margin:10px 16px 8px;
-  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
-  border-radius:16px; padding:14px 16px;
+flex-shrink:0; margin:10px 16px 8px;
+background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
+border-radius:16px; padding:14px 16px;
 }
 .ios-share-btn {
-  width:100%; margin-bottom:14px;
-  background:linear-gradient(135deg,#0a84ff,#0060df);
-  border:none; border-radius:14px; padding:14px 20px; color:white;
-  font-family:'Syne',sans-serif; font-size:15px; font-weight:800;
-  cursor:pointer; -webkit-appearance:none;
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  box-shadow:0 4px 20px rgba(10,132,255,.3); transition:all .15s;
+width:100%; margin-bottom:14px;
+background:linear-gradient(135deg,#0a84ff,#0060df);
+border:none; border-radius:14px; padding:14px 20px; color:white;
+font-family:‘Syne’,sans-serif; font-size:15px; font-weight:800;
+cursor:pointer; -webkit-appearance:none;
+display:flex; align-items:center; justify-content:center; gap:10px;
+box-shadow:0 4px 20px rgba(10,132,255,.3); transition:all .15s;
 }
 .ios-share-btn:active { transform:scale(.98); }
 .ios-divider {
-  text-align:center; font-size:11px; color:var(--muted);
-  font-family:'DM Mono',monospace; margin-bottom:12px; position:relative;
+text-align:center; font-size:11px; color:var(–muted);
+font-family:‘DM Mono’,monospace; margin-bottom:12px; position:relative;
 }
-.ios-divider::before,.ios-divider::after { content:''; position:absolute; top:50%; width:28%; height:1px; background:var(--border); }
+.ios-divider::before,.ios-divider::after { content:’’; position:absolute; top:50%; width:28%; height:1px; background:var(–border); }
 .ios-divider::before { left:0; } .ios-divider::after { right:0; }
 .ios-steps { display:flex; flex-direction:column; gap:8px; }
-.ios-step-row { display:flex; align-items:center; gap:10px; font-size:12px; color:rgba(255,255,255,.6); font-family:'DM Mono',monospace; }
+.ios-step-row { display:flex; align-items:center; gap:10px; font-size:12px; color:rgba(255,255,255,.6); font-family:‘DM Mono’,monospace; }
 .ios-step-num {
-  width:20px; height:20px; border-radius:6px;
-  background:rgba(255,45,85,.2); color:var(--accent);
-  font-size:10px; font-weight:800;
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; font-family:'Syne',sans-serif;
+width:20px; height:20px; border-radius:6px;
+background:rgba(255,45,85,.2); color:var(–accent);
+font-size:10px; font-weight:800;
+display:flex; align-items:center; justify-content:center;
+flex-shrink:0; font-family:‘Syne’,sans-serif;
 }
 
 /* ── PC Success Overlay ── */
 .pc-overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.8); align-items:center; justify-content:center; }
 .pc-overlay.open { display:flex; animation:fadeIn .25s ease both; }
-.pc-box { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:36px 28px; text-align:center; max-width:320px; width:90%; animation:scaleIn .3s ease both; }
+.pc-box { background:var(–surface); border:1px solid var(–border); border-radius:24px; padding:36px 28px; text-align:center; max-width:320px; width:90%; animation:scaleIn .3s ease both; }
 .pc-icon { width:60px; height:60px; background:linear-gradient(135deg,rgba(48,209,88,.15),rgba(48,209,88,.05)); border:1px solid rgba(48,209,88,.3); border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 18px; font-size:26px; }
 .pc-box h3 { font-size:19px; font-weight:800; margin-bottom:8px; }
-.pc-box p { font-size:13px; color:var(--muted); font-family:'DM Mono',monospace; line-height:1.65; }
-.pc-close-btn { margin-top:22px; width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:12px; color:var(--text); font-family:'Syne',sans-serif; font-size:14px; font-weight:700; cursor:pointer; -webkit-appearance:none; transition:all .15s; }
+.pc-box p { font-size:13px; color:var(–muted); font-family:‘DM Mono’,monospace; line-height:1.65; }
+.pc-close-btn { margin-top:22px; width:100%; background:var(–surface2); border:1px solid var(–border); border-radius:12px; padding:12px; color:var(–text); font-family:‘Syne’,sans-serif; font-size:14px; font-weight:700; cursor:pointer; -webkit-appearance:none; transition:all .15s; }
 .pc-close-btn:hover { background:rgba(255,255,255,.06); }
 
 /* ── History section ── */
 .history-section {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); overflow:hidden; margin-top:16px;
-  animation:fadeUp .8s ease both;
+background:var(–surface); border:1px solid var(–border);
+border-radius:var(–radius); overflow:hidden; margin-top:16px;
+animation:fadeUp .8s ease both;
 }
 .history-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:16px 20px; cursor:pointer; user-select:none;
+display:flex; align-items:center; justify-content:space-between;
+padding:16px 20px; cursor:pointer; user-select:none;
 }
-.history-header h2 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); }
-.history-chevron { color:var(--muted); font-size:12px; transition:transform .25s; }
+.history-header h2 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(–muted); }
+.history-chevron { color:var(–muted); font-size:12px; transition:transform .25s; }
 .history-chevron.open { transform:rotate(180deg); }
-.history-body { display:none; border-top:1px solid var(--border); }
+.history-body { display:none; border-top:1px solid var(–border); }
 .history-body.open { display:block; }
-.history-empty { padding:20px; text-align:center; font-size:13px; color:var(--muted); font-family:'DM Mono',monospace; }
+.history-empty { padding:20px; text-align:center; font-size:13px; color:var(–muted); font-family:‘DM Mono’,monospace; }
 .history-item {
-  display:flex; align-items:center; gap:14px;
-  padding:12px 20px; border-bottom:1px solid var(--border);
-  transition:background .15s; cursor:pointer;
+display:flex; align-items:center; gap:14px;
+padding:12px 20px; border-bottom:1px solid var(–border);
+transition:background .15s; cursor:pointer;
 }
 .history-item:last-child { border-bottom:none; }
 .history-item:hover { background:rgba(255,255,255,.02); }
-.history-thumb { width:40px; height:40px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(--surface2); }
+.history-thumb { width:40px; height:40px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(–surface2); }
 .history-info { flex:1; min-width:0; }
 .history-title { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.history-meta { font-size:11px; color:var(--muted); font-family:'DM Mono',monospace; margin-top:2px; }
+.history-meta { font-size:11px; color:var(–muted); font-family:‘DM Mono’,monospace; margin-top:2px; }
 .history-reuse {
-  flex-shrink:0; background:rgba(255,45,85,.1); border:1px solid rgba(255,45,85,.2);
-  border-radius:8px; padding:5px 10px; color:var(--accent);
-  font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
-  cursor:pointer; -webkit-appearance:none; white-space:nowrap;
+flex-shrink:0; background:rgba(255,45,85,.1); border:1px solid rgba(255,45,85,.2);
+border-radius:8px; padding:5px 10px; color:var(–accent);
+font-family:‘Syne’,sans-serif; font-size:11px; font-weight:700;
+cursor:pointer; -webkit-appearance:none; white-space:nowrap;
 }
-.history-clear { display:block; width:100%; padding:12px; background:none; border:none; color:var(--muted); font-family:'DM Mono',monospace; font-size:12px; cursor:pointer; text-align:center; border-top:1px solid var(--border); transition:color .15s; }
-.history-clear:hover { color:var(--accent); }
+.history-clear { display:block; width:100%; padding:12px; background:none; border:none; color:var(–muted); font-family:‘DM Mono’,monospace; font-size:12px; cursor:pointer; text-align:center; border-top:1px solid var(–border); transition:color .15s; }
+.history-clear:hover { color:var(–accent); }
 
 /* ── Instructions ── */
-.instructions { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-top:16px; animation:fadeUp .7s ease both; }
-.instructions h2 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:16px; }
+.instructions { background:var(–surface); border:1px solid var(–border); border-radius:var(–radius); padding:20px; margin-top:16px; animation:fadeUp .7s ease both; }
+.instructions h2 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(–muted); margin-bottom:16px; }
 .step { display:flex; gap:14px; margin-bottom:14px; align-items:flex-start; }
 .step:last-child { margin-bottom:0; }
 .step-num { flex-shrink:0; width:28px; height:28px; background:linear-gradient(135deg,#ff2d55,#ff6b00); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:white; }
 .step-text { padding-top:3px; }
 .step-text strong { display:block; font-size:14px; font-weight:700; margin-bottom:2px; }
-.step-text p { font-size:13px; color:var(--muted); line-height:1.5; font-family:'DM Mono',monospace; }
-.platform-note { margin-top:16px; padding:14px 16px; background:var(--surface2); border-radius:12px; }
-.note-row { display:flex; gap:10px; font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; margin-bottom:8px; line-height:1.5; align-items:flex-start; }
+.step-text p { font-size:13px; color:var(–muted); line-height:1.5; font-family:‘DM Mono’,monospace; }
+.platform-note { margin-top:16px; padding:14px 16px; background:var(–surface2); border-radius:12px; }
+.note-row { display:flex; gap:10px; font-size:12px; color:var(–muted); font-family:‘DM Mono’,monospace; margin-bottom:8px; line-height:1.5; align-items:flex-start; }
 .note-row:last-child { margin-bottom:0; }
 .note-label { font-weight:700; color:rgba(255,255,255,.35); white-space:nowrap; flex-shrink:0; }
 
@@ -362,10 +364,12 @@ body::after {
 @keyframes scaleIn  { from{opacity:0;transform:scale(.92)} to{opacity:1;transform:scale(1)} }
 @keyframes spin     { to{transform:rotate(360deg)} }
 </style>
+
 </head>
 <body>
 
 <!-- ══ iOS Modal ══ -->
+
 <div class="ios-modal" id="iosModal">
   <div class="ios-modal-header">
     <span class="ios-modal-title">Save to Photos</span>
@@ -396,6 +400,7 @@ body::after {
 </div>
 
 <!-- ══ PC Success Overlay ══ -->
+
 <div class="pc-overlay" id="pcOverlay">
   <div class="pc-box">
     <div class="pc-icon">✓</div>
@@ -408,6 +413,7 @@ body::after {
 <div class="container">
 
   <!-- Header -->
+
   <div class="header">
     <div class="logo-mark">
       <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.5a8.27 8.27 0 0 0 4.84 1.55V6.59a4.85 4.85 0 0 1-1.07.1z"/></svg>
@@ -418,6 +424,7 @@ body::after {
   </div>
 
   <!-- Input -->
+
   <div class="card">
     <div class="card-label">Paste TikTok Link</div>
     <div class="input-row">
@@ -431,101 +438,108 @@ body::after {
   </div>
 
   <!-- Error -->
+
   <div class="error-box" id="errorBox">
     <p id="errorMsg"></p>
     <button class="retry-btn" id="retryBtn">↺ Try Again</button>
   </div>
 
   <!-- Loading -->
+
   <div class="status" id="status">
     <div class="spinner"></div>
     <p id="statusMsg">Fetching video info…</p>
   </div>
 
   <!-- Result -->
+
   <div class="result-card" id="resultCard">
     <div class="video-info">
 
-      <!-- Thumbnail (hidden when slideshow) -->
-      <div class="thumb-wrap" id="thumbWrap">
-        <img id="thumbnail" src="" alt="">
-        <div class="thumb-overlay">
-          <div>
-            <div class="vid-title" id="vidTitle"></div>
-            <div class="vid-author" id="vidAuthor"></div>
-          </div>
-        </div>
+```
+  <!-- Thumbnail (hidden when slideshow) -->
+  <div class="thumb-wrap" id="thumbWrap">
+    <img id="thumbnail" src="" alt="">
+    <div class="thumb-overlay">
+      <div>
+        <div class="vid-title" id="vidTitle"></div>
+        <div class="vid-author" id="vidAuthor"></div>
       </div>
-
-      <div class="vid-meta">
-        <div class="meta-pill">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
-          <span id="viewCount">—</span>
-        </div>
-        <div class="meta-pill">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          <span id="likeCount">—</span>
-        </div>
-        <div class="meta-pill">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 18H5V9h14v11z"/></svg>
-          <span id="duration">—</span>
-        </div>
-      </div>
-
-      <!-- PC Video Preview (non-iOS only) -->
-      <div class="pc-preview" id="pcPreview">
-        <div class="pc-preview-label">Preview</div>
-        <video id="pcPreviewVideo" controls playsinline preload="metadata"></video>
-      </div>
-
-      <!-- Slideshow images -->
-      <div class="slideshow-wrap" id="slideshowWrap">
-        <div class="slideshow-label">Images</div>
-        <div class="slides-grid" id="slidesGrid"></div>
-      </div>
-
-      <!-- Download buttons -->
-      <div class="download-section" id="downloadSection">
-        <div class="dl-label" id="dlSectionLabel">Download</div>
-
-        <button class="dl-btn primary" id="dlHD" disabled>
-          <div class="progress-bg" id="hdProg"></div>
-          <div class="btn-content">
-            <span id="dlHDText">⬇  HD Video + Sound</span>
-            <span class="badge" id="dlHDBadge">Full HD</span>
-          </div>
-        </button>
-
-        <div class="hevc-warn" id="hevcWarn">
-          ⚠ This video's HD stream uses HEVC (H.265) which your device may not support. Use <strong>Standard Quality</strong> below for guaranteed compatibility.
-        </div>
-        <button class="dl-btn" id="dlSD" disabled>
-          <div class="progress-bg" id="sdProg"></div>
-          <div class="btn-content">
-            <span id="dlSDText">⬇  Standard Quality</span>
-            <span class="badge">SD</span>
-          </div>
-        </button>
-
-        <div class="same-quality-note" id="sameQualNote">
-          ℹ HD and SD are the same file for this video
-        </div>
-
-        <button class="dl-btn audio-btn" id="dlAudio" disabled>
-          <div class="progress-bg" id="audioProg"></div>
-          <div class="btn-content">
-            <span id="dlAudioText">♫  Audio Only</span>
-            <span class="badge">M4A</span>
-          </div>
-        </button>
-
-        <div class="toast-bar" id="toastBar"></div>
-      </div>
-
     </div>
   </div>
 
+  <div class="vid-meta">
+    <div class="meta-pill">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
+      <span id="viewCount">—</span>
+    </div>
+    <div class="meta-pill">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <span id="likeCount">—</span>
+    </div>
+    <div class="meta-pill">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 18H5V9h14v11z"/></svg>
+      <span id="duration">—</span>
+    </div>
+  </div>
+
+  <!-- PC Video Preview (non-iOS only) -->
+  <div class="pc-preview" id="pcPreview">
+    <div class="pc-preview-label">Preview</div>
+    <video id="pcPreviewVideo" controls playsinline preload="metadata"></video>
+  </div>
+
+  <!-- Slideshow images -->
+  <div class="slideshow-wrap" id="slideshowWrap">
+    <div class="slideshow-label">Images</div>
+    <div class="slides-grid" id="slidesGrid"></div>
+  </div>
+
+  <!-- Download buttons -->
+  <div class="download-section" id="downloadSection">
+    <div class="dl-label" id="dlSectionLabel">Download</div>
+
+    <button class="dl-btn primary" id="dlHD" disabled>
+      <div class="progress-bg" id="hdProg"></div>
+      <div class="btn-content">
+        <span id="dlHDText">⬇  HD Video + Sound</span>
+        <span class="badge" id="dlHDBadge">Full HD</span>
+      </div>
+    </button>
+
+    <div class="hevc-warn" id="hevcWarn">
+      ⚠ This video's HD stream uses HEVC (H.265) which your device may not support. Use <strong>Standard Quality</strong> below for guaranteed compatibility.
+    </div>
+    <button class="dl-btn" id="dlSD" disabled>
+      <div class="progress-bg" id="sdProg"></div>
+      <div class="btn-content">
+        <span id="dlSDText">⬇  Standard Quality</span>
+        <span class="badge">SD</span>
+      </div>
+    </button>
+
+    <div class="same-quality-note" id="sameQualNote">
+      ℹ HD and SD are the same file for this video
+    </div>
+
+    <button class="dl-btn audio-btn" id="dlAudio" disabled>
+      <div class="progress-bg" id="audioProg"></div>
+      <div class="btn-content">
+        <span id="dlAudioText">♫  Audio Only</span>
+        <span class="badge">M4A</span>
+      </div>
+    </button>
+
+    <div class="toast-bar" id="toastBar"></div>
+  </div>
+
+</div>
+```
+
+  </div>
+
   <!-- History -->
+
   <div class="history-section" id="historySection" style="display:none">
     <div class="history-header" id="historyToggle">
       <h2>Download History</h2>
@@ -539,6 +553,7 @@ body::after {
   </div>
 
   <!-- Instructions -->
+
   <div class="instructions">
     <h2>How to Use</h2>
     <div class="step">
@@ -1074,9 +1089,8 @@ async function fetchAndFix(url, onProgress, skipAudioFix = false) {
   let offset = 0;
   for (const c of chunks) { merged.set(c, offset); offset += c.length; }
   const fixed    = skipAudioFix ? merged.buffer : fixAudioDelay(merged.buffer);
-  const withMeta = injectMp4Metadata(fixed, authorName ? '@'+authorName : '', videoTitle);
   onProgress(100);
-  return new Blob([withMeta], { type: skipAudioFix ? 'audio/mp4' : 'video/mp4' });
+    return new Blob([fixed], { type: skipAudioFix ? 'audio/mp4' : 'video/mp4' });
 }
 
 /* ── Download History (localStorage) ── */
@@ -1146,5 +1160,6 @@ histToggle.addEventListener('click', () => {
 renderHistory();
 setTimeout(checkClipboard, 800);
 </script>
+
 </body>
 </html>
