@@ -901,36 +901,124 @@ document.getElementById('iosClose').addEventListener('click', () => {
 
 document.getElementById('pcClose').addEventListener('click', () => pcOverlay.classList.remove('open'));
 
-/* ── Audio delay fix ── */
+/* ── Audio delay fix ─────────────────────────────────────────────────────────
+ * TikTok encodes two types of delay in the elst (edit list) box:
+ *   Pattern A — negative media_time: decoder skips N samples before starting
+ *   Pattern B — media_time = -1 (empty edit): silent gap of segment_duration
+ *
+ * Zeroing both to 0 over-corrects by ~12 ms because AAC has a fixed encoder
+ * priming buffer that legitimate players expect. The fix is to:
+ *   - Read the track's actual timescale from its mdhd box
+ *   - Leave a residual of exactly KEEP_MS milliseconds instead of going to 0
+ *     (Pattern A → set media_time = +residual)
+ *     (Pattern B → set segment_duration = residual, keep media_time = -1)
+ * ──────────────────────────────────────────────────────────────────────────── */
+const KEEP_MS = 0.012; // seconds of delay to preserve
+
 function fixAudioDelay(srcBuffer) {
   const buf  = srcBuffer.slice(0);
   const u8   = new Uint8Array(buf);
   const view = new DataView(buf);
 
-  for (let i = 4; i < u8.length - 4; i++) {
-    if (u8[i] !== 0x65 || u8[i+1] !== 0x6C || u8[i+2] !== 0x73 || u8[i+3] !== 0x74) continue;
-    const version    = u8[i + 4];
-    const entryCount = view.getUint32(i + 8, false);
-    let ptr = i + 12;
-    for (let e = 0; e < entryCount; e++) {
-      if (version === 1) {
-        const mtHi = view.getInt32(ptr + 8,  false);
-        const mtLo = view.getUint32(ptr + 12, false);
-        const isEmptyEdit = (mtHi === -1 && mtLo === 0xFFFFFFFF);
-        if (isEmptyEdit) {
-          view.setUint32(ptr + 0, 0, false); view.setUint32(ptr + 4, 0, false);
-        } else if (mtHi < 0) {
-          view.setInt32(ptr + 8, 0, false); view.setUint32(ptr + 12, 0, false);
+  /* ── helper: find first box of given type within [start, end) ── */
+  function findBox(start, end, type) {
+    let cur = start;
+    while (cur + 8 <= end) {
+      const sz = view.getUint32(cur, false);
+      if (sz < 8 || cur + sz > end) break;
+      if (u8[cur+4] === type.charCodeAt(0) && u8[cur+5] === type.charCodeAt(1) &&
+          u8[cur+6] === type.charCodeAt(2) && u8[cur+7] === type.charCodeAt(3)) return cur;
+      cur += sz;
+    }
+    return -1;
+  }
+
+  /* ── find moov ── */
+  let moovStart = -1; let cur = 0;
+  while (cur + 8 <= u8.length) {
+    const sz = view.getUint32(cur, false);
+    if (sz < 8 || cur + sz > u8.length) break;
+    if (u8[cur+4]===0x6D && u8[cur+5]===0x6F && u8[cur+6]===0x6F && u8[cur+7]===0x76) { moovStart = cur; break; }
+    cur += sz;
+  }
+  if (moovStart === -1) return buf;
+  const moovEnd = moovStart + view.getUint32(moovStart, false);
+
+  /* ── iterate trak boxes inside moov ── */
+  let trakCur = moovStart + 8;
+  while (trakCur + 8 <= moovEnd) {
+    const trakSz = view.getUint32(trakCur, false);
+    if (trakSz < 8) break;
+    const tt = String.fromCharCode(u8[trakCur+4], u8[trakCur+5], u8[trakCur+6], u8[trakCur+7]);
+
+    if (tt === 'trak') {
+      const trakEnd = trakCur + trakSz;
+
+      /* read timescale from mdia > mdhd */
+      let timescale = 44100; // safe default (common AAC rate)
+      const mdiaPos = findBox(trakCur + 8, trakEnd, 'mdia');
+      if (mdiaPos !== -1) {
+        const mdiaEnd = mdiaPos + view.getUint32(mdiaPos, false);
+        const mdhdPos = findBox(mdiaPos + 8, mdiaEnd, 'mdhd');
+        if (mdhdPos !== -1) {
+          const mdhdVer = u8[mdhdPos + 8];
+          // v0: size(4)+type(4)+ver(1)+flags(3)+ct(4)+mt(4) → timescale at +20
+          // v1: size(4)+type(4)+ver(1)+flags(3)+ct(8)+mt(8) → timescale at +28
+          timescale = view.getUint32(mdhdPos + (mdhdVer === 1 ? 28 : 20), false);
         }
-        ptr += 20;
-      } else {
-        const mt = view.getInt32(ptr + 4, false);
-        if (mt === -1)     view.setUint32(ptr + 0, 0, false);
-        else if (mt < 0)   view.setInt32(ptr + 4, 0, false);
-        ptr += 12;
+      }
+
+      /* residual in timescale units = exactly KEEP_MS seconds */
+      const residual = Math.round(KEEP_MS * timescale);
+
+      /* find edts > elst */
+      const edtsPos = findBox(trakCur + 8, trakEnd, 'edts');
+      if (edtsPos !== -1) {
+        const edtsEnd = edtsPos + view.getUint32(edtsPos, false);
+        const elstPos = findBox(edtsPos + 8, edtsEnd, 'elst');
+        if (elstPos !== -1) {
+          // elst full-box: size(4)+type(4)+version(1)+flags(3)+entry_count(4)+entries
+          const elstVer    = u8[elstPos + 8];
+          const entryCount = view.getUint32(elstPos + 12, false);
+          let   ptr        = elstPos + 16;
+
+          for (let e = 0; e < entryCount; e++) {
+            if (elstVer === 1) {
+              // v1 entry (20 bytes): seg_dur(8) + media_time(8) + media_rate(4)
+              const mtHi = view.getInt32(ptr + 8,  false);
+              const mtLo = view.getUint32(ptr + 12, false);
+              const isEmpty = (mtHi === -1 && mtLo === 0xFFFFFFFF);
+              if (isEmpty) {
+                // Pattern B: replace silent gap with residual duration
+                view.setUint32(ptr + 0, 0, false);
+                view.setUint32(ptr + 4, residual, false);
+                // keep media_time = -1 (it marks this as an empty edit)
+              } else if (mtHi < 0) {
+                // Pattern A: set media_time to +residual (skip exactly 12 ms)
+                view.setInt32(ptr + 8,  0, false);
+                view.setUint32(ptr + 12, residual, false);
+              }
+              ptr += 20;
+            } else {
+              // v0 entry (12 bytes): seg_dur(4) + media_time(4) + media_rate(4)
+              const mt = view.getInt32(ptr + 4, false);
+              if (mt === -1) {
+                // Pattern B: replace silent gap with residual duration
+                view.setUint32(ptr + 0, residual, false);
+                // keep media_time = -1
+              } else if (mt < 0) {
+                // Pattern A: set media_time to +residual
+                view.setInt32(ptr + 4, residual, false);
+              }
+              ptr += 12;
+            }
+          }
+        }
       }
     }
+    trakCur += trakSz;
   }
+
   return buf;
 }
 
