@@ -420,7 +420,7 @@ cursor:pointer; -webkit-appearance:none; white-space:nowrap;
     </div>
     <h1>TikSave</h1>
     <p>no watermark · full HD · with sound</p>
-    <div class="version-badge">v2.0</div>
+    <div class="version-badge">v2.1</div>
   </div>
 
   <!-- Input -->
@@ -874,18 +874,51 @@ async function startDownload(url, quality, progressEl, btn) {
 
 /* ── iOS Share ── */
 document.getElementById('iosShareBtn').addEventListener('click', async () => {
-  const file = currentBlob
-    ? new File([currentBlob], `${videoTitle}.mp4`, { type: 'video/mp4' })
-    : null;
+  const shareBtn = document.getElementById('iosShareBtn');
+
+  /* If we already have a blob, share it directly */
+  if (currentBlob) {
+    const file = new File([currentBlob], `${videoTitle}.mp4`, { type: 'video/mp4' });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: videoTitle });
+      } else if (navigator.share) {
+        await navigator.share({ title: videoTitle });
+      }
+    } catch(e) { if (e.name !== 'AbortError') console.warn(e); }
+    return;
+  }
+
+  /* No blob yet (fallback path) — fetch it now then share */
+  const src = iosVideo.src;
+  if (!src || src.startsWith('blob:')) return;
+
+  const origText = shareBtn.textContent;
+  shareBtn.textContent = '⏳ Preparing…';
+  shareBtn.disabled = true;
+
   try {
-    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    const blob = await fetchAndFix(src, () => {}, false);
+    currentBlob = blob;
+
+    const file = new File([blob], `${videoTitle}.mp4`, { type: 'video/mp4' });
+    shareBtn.textContent = origText;
+    shareBtn.disabled = false;
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: videoTitle });
     } else if (navigator.share) {
-      await navigator.share({ title: videoTitle, url: iosVideo.src });
+      await navigator.share({ title: videoTitle });
     } else {
-      alert('Please long-press the video to save it.');
+      alert('Tap and hold the video above, then choose "Save to Photos".');
     }
-  } catch(e) { if (e.name !== 'AbortError') console.warn(e); }
+  } catch(e) {
+    shareBtn.textContent = origText;
+    shareBtn.disabled = false;
+    if (e.name !== 'AbortError') {
+      alert('Could not prepare video for sharing. Please long-press the video above and choose "Save to Photos".');
+    }
+  }
 });
 
 document.getElementById('iosClose').addEventListener('click', () => {
