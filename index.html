@@ -414,7 +414,7 @@ body::after {
     </div>
     <h1>TikSave</h1>
     <p>TikTok · YouTube · no watermark · full HD</p>
-    <div class="version-badge">v3.2</div>
+    <div class="version-badge">v3.3</div>
   </div>
 
 
@@ -1260,14 +1260,37 @@ const COBALT_INSTANCES = [
   'https://cobalt.privacyredirect.com',
 ];
 
-/* Invidious instances — open-source YT frontend with public CORS-enabled API */
-const INVIDIOUS_INSTANCES = [
-  'https://iv.ggtyler.dev',
-  'https://invidious.nerdvpn.de',
-  'https://invidious.privacyredirect.com',
-  'https://yt.cdaut.de',
-  'https://invidious.tiekoetter.com',
-];
+/* Invidious instances — loaded dynamically from the official registry so we
+ * always get CORS-enabled, currently-online instances. Falls back to a small
+ * hardcoded list if the registry itself is unreachable. */
+let _invidiousInstances = null;
+
+async function getInvidiousInstances() {
+  if (_invidiousInstances) return _invidiousInstances;
+  try {
+    const res  = await fetchWithTimeout(
+      'https://api.invidious.io/instances.json?sort_by=cors',
+      { mode: 'cors' }, 6000
+    );
+    const list = await res.json();
+    // list = [[hostname, {cors, api, type, ...}], ...]
+    const filtered = list
+      .filter(([, info]) => info.cors === true && info.api === true && info.type === 'https')
+      .map(([host]) => `https://${host}`);
+    if (filtered.length > 0) {
+      _invidiousInstances = filtered;
+      return filtered;
+    }
+  } catch {}
+  // Hardcoded fallback — known CORS-enabled instances
+  _invidiousInstances = [
+    'https://invidious.f5.si',
+    'https://inv.nadeko.net',
+    'https://invidious.privacyredirect.com',
+    'https://iv.datura.network',
+  ];
+  return _invidiousInstances;
+}
 
 function fetchWithTimeout(url, options, ms = 8000) {
   const ctrl  = new AbortController();
@@ -1309,11 +1332,12 @@ async function tryCobalt(url, quality, onStatus) {
 
 /* ── Invidious: extract combined stream URL (up to 720p) ── */
 async function tryInvidious(videoId, onStatus) {
+  const instances = await getInvidiousInstances();
   let lastErr = '';
-  for (let i = 0; i < INVIDIOUS_INSTANCES.length; i++) {
-    const base  = INVIDIOUS_INSTANCES[i];
+  for (let i = 0; i < instances.length; i++) {
+    const base  = instances[i];
     const label = new URL(base).hostname;
-    if (onStatus) onStatus(`Fallback server ${i + 1}/${INVIDIOUS_INSTANCES.length}: ${label}…`);
+    if (onStatus) onStatus(`Fallback server ${i + 1}/${instances.length}: ${label}…`);
 
     try {
       const res  = await fetchWithTimeout(
@@ -1436,6 +1460,8 @@ async function doFetchYouTube(url) {
 
 /* Init */
 renderHistory();
+// Pre-fetch Invidious instances in the background so they're ready when needed
+getInvidiousInstances().catch(() => {});
 setTimeout(checkClipboard, 800);
 </script>
 </body>
