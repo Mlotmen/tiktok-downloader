@@ -414,7 +414,7 @@ body::after {
     </div>
     <h1>TikSave</h1>
     <p>TikTok · YouTube · no watermark · full HD</p>
-    <div class="version-badge">v3.1</div>
+    <div class="version-badge">v3.2</div>
   </div>
 
 
@@ -1241,72 +1241,129 @@ function switchTab(tab) {
 tabTikTok.addEventListener('click',  () => switchTab('tiktok'));
 tabYouTube.addEventListener('click', () => switchTab('youtube'));
 
-/* ── YouTube via cobalt ──────────────────────────────────────────────────────
- * Uses a hardcoded list of community cobalt instances with CORS enabled.
- * No registry fetch — avoids one more potential failure point.
- * Manual AbortController timeout instead of AbortSignal.timeout()
- * (AbortSignal timeout unsupported on iOS Safari < 16.4).
+/* ── YouTube download ────────────────────────────────────────────────────────
+ * Strategy (in order):
+ *   1. cobalt community instances — best quality, up to 1080p
+ *   2. Invidious public API      — fallback, up to 720p combined stream
+ *
+ * fetchWithTimeout wraps fetch() with a manual AbortController so it works
+ * on iOS Safari < 16.4 which lacks AbortSignal.timeout.
  * ───────────────────────────────────────────────────────────────────────── */
+
+/* cobalt instances — api.cobalt.tools deliberately excluded (CF-protected) */
 const COBALT_INSTANCES = [
   'https://cobalt.eientei.org',
   'https://cobalt.lunar.icu',
-  'https://cobalt.api.onrender.com',
-  'https://co.wuk.sh',
-  'https://cobalt-api.kkdai.me',
-  'https://api.cobalt.tools',
+  'https://nyc1.coapi.ggtyler.dev',
+  'https://cobalt.urdh.dev',
+  'https://cob.ftp.sh',
+  'https://cobalt.privacyredirect.com',
 ];
 
-function fetchWithTimeout(url, options, ms = 9000) {
-  const ctrl = new AbortController();
+/* Invidious instances — open-source YT frontend with public CORS-enabled API */
+const INVIDIOUS_INSTANCES = [
+  'https://iv.ggtyler.dev',
+  'https://invidious.nerdvpn.de',
+  'https://invidious.privacyredirect.com',
+  'https://yt.cdaut.de',
+  'https://invidious.tiekoetter.com',
+];
+
+function fetchWithTimeout(url, options, ms = 8000) {
+  const ctrl  = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms);
   return fetch(url, { ...options, signal: ctrl.signal })
     .finally(() => clearTimeout(timer));
 }
 
+/* ── Cobalt: try each instance for a given quality ── */
 async function tryCobalt(url, quality, onStatus) {
   let lastErr = '';
   for (let i = 0; i < COBALT_INSTANCES.length; i++) {
-    const base = COBALT_INSTANCES[i];
+    const base  = COBALT_INSTANCES[i];
     const label = new URL(base).hostname;
-    if (onStatus) onStatus(`Trying server ${i + 1}/${COBALT_INSTANCES.length} (${label})…`);
+    if (onStatus) onStatus(`Trying server ${i + 1}/${COBALT_INSTANCES.length}: ${label}…`);
 
     try {
       const res = await fetchWithTimeout(`${base}/`, {
         method: 'POST', mode: 'cors',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, videoQuality: quality, downloadMode: 'auto', filenameStyle: 'basic' }),
-      }, 9000);
+      });
 
-      if (!res.ok) { lastErr = `HTTP ${res.status} from ${label}`; continue; }
+      if (!res.ok) { lastErr = `HTTP ${res.status} (${label})`; continue; }
       const data = await res.json();
-
-      if (data.status === 'error') { lastErr = data.error?.code || `error from ${label}`; continue; }
-      if (data.status === 'tunnel' || data.status === 'redirect') {
-        return { url: data.url, audio: data.audioUrl || '' };
-      }
-      if (data.status === 'picker' && Array.isArray(data.picker) && data.picker.length) {
+      if (data.status === 'error') { lastErr = `${data.error?.code || 'error'} (${label})`; continue; }
+      if (data.status === 'tunnel' || data.status === 'redirect') return { url: data.url, audio: data.audioUrl || '', quality };
+      if (data.status === 'picker' && data.picker?.length) {
         const v = data.picker.find(p => p.type === 'video') || data.picker[0];
-        return { url: v.url, audio: data.audio || '' };
+        return { url: v.url, audio: data.audio || '', quality };
       }
-      lastErr = `unexpected status "${data.status}" from ${label}`;
-
+      lastErr = `status "${data.status}" (${label})`;
     } catch(e) {
-      lastErr = e.name === 'AbortError' ? `timeout on ${label}` : (e.message || String(e));
+      lastErr = e.name === 'AbortError' ? `timeout (${label})` : `${e.message} (${label})`;
     }
   }
-  throw new Error(`Could not reach any download server. Last error: ${lastErr}`);
+  throw new Error(lastErr || 'all cobalt servers failed');
+}
+
+/* ── Invidious: extract combined stream URL (up to 720p) ── */
+async function tryInvidious(videoId, onStatus) {
+  let lastErr = '';
+  for (let i = 0; i < INVIDIOUS_INSTANCES.length; i++) {
+    const base  = INVIDIOUS_INSTANCES[i];
+    const label = new URL(base).hostname;
+    if (onStatus) onStatus(`Fallback server ${i + 1}/${INVIDIOUS_INSTANCES.length}: ${label}…`);
+
+    try {
+      const res  = await fetchWithTimeout(
+        `${base}/api/v1/videos/${videoId}?fields=formatStreams,adaptiveFormats,title,author`,
+        { mode: 'cors' }
+      );
+      if (!res.ok) { lastErr = `HTTP ${res.status} (${label})`; continue; }
+      const data = await res.json();
+
+      /* formatStreams = combined video+audio, sorted best-first */
+      const streams = (data.formatStreams || []).filter(s => s.container === 'mp4');
+      if (!streams.length) { lastErr = `no MP4 streams (${label})`; continue; }
+
+      /* pick highest resolution — Invidious sorts descending so first = best */
+      const best = streams[0];
+      return {
+        url: best.url, audio: '', quality: best.qualityLabel || '720p',
+        title: data.title || '', author: data.author || '',
+      };
+    } catch(e) {
+      lastErr = e.name === 'AbortError' ? `timeout (${label})` : `${e.message} (${label})`;
+    }
+  }
+  throw new Error(lastErr || 'all Invidious servers failed');
 }
 
 async function doFetchYouTube(url) {
   statusMsg.textContent = 'Connecting to download server…';
+  show(statusEl);
+
+  /* Extract video ID for thumbnail + Invidious fallback */
+  const ytId = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)?.[1] || '';
 
   try {
-    // Try 1080p first, fall back to 720p
+    /* Stage 1: try cobalt at 1080p → 720p */
     let result;
     try {
-      result = await tryCobalt(url, '1080', s => { statusMsg.textContent = s; show(statusEl); });
-    } catch {
-      result = await tryCobalt(url, '720', s => { statusMsg.textContent = s; show(statusEl); });
+      result = await tryCobalt(url, '1080', s => { statusMsg.textContent = s; });
+    } catch(e1) {
+      try {
+        result = await tryCobalt(url, '720', s => { statusMsg.textContent = s; });
+      } catch(e2) {
+        /* Stage 2: fall back to Invidious (combined stream, up to 720p) */
+        if (!ytId) throw new Error('Could not extract video ID from URL.');
+        statusMsg.textContent = 'Trying fallback servers…';
+        result = await tryInvidious(ytId, s => { statusMsg.textContent = s; });
+        /* Invidious gives us title/author too */
+        if (result.title)  videoTitle = result.title.slice(0, 60).replace(/[^\w\s-]/g, '').trim() || 'youtube-video';
+        if (result.author) authorName = result.author;
+      }
     }
 
     hdUrl    = result.url;
@@ -1320,7 +1377,7 @@ async function doFetchYouTube(url) {
     const thumb = ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : '';
 
     document.getElementById('thumbnail').src     = thumb;
-    document.getElementById('vidTitle').textContent  = 'YouTube Video';
+    document.getElementById('vidTitle').textContent  = result.quality ? `YouTube Video — ${result.quality}` : 'YouTube Video';
     document.getElementById('vidAuthor').textContent = ytId ? `youtu.be/${ytId}` : 'YouTube';
     document.getElementById('viewCount').textContent = '—';
     document.getElementById('likeCount').textContent = '—';
