@@ -1367,13 +1367,12 @@ async function doFetchYouTube(url) {
     }
 
     hdUrl    = result.url;
-    sdUrl    = result.url;   // cobalt returns one merged stream
+    sdUrl    = result.url;
     audioUrl = result.audio || '';
-    videoTitle  = 'youtube-video';
-    authorName  = '';
+    // Only reset title/author if Invidious didn't already set them
+    if (!videoTitle || videoTitle === 'youtube-video') videoTitle = 'youtube-video';
+    if (!authorName) authorName = '';
 
-    // Try to extract video ID for a thumbnail
-    const ytId = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)?.[1] || '';
     const thumb = ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : '';
 
     document.getElementById('thumbnail').src     = thumb;
