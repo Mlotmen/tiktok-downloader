@@ -1530,7 +1530,7 @@ async function tryCobalt(url, quality, onStatus) {
 
 /* ── Invidious: extract combined stream URL (up to 720p) ── */
 async function tryInvidious(videoId, onStatus) {
-  const instances = await getInvidiousInstances();
+  const instances = await loadInvidiousInstances();
   let lastErr = '';
   for (let i = 0; i < instances.length; i++) {
     const base  = instances[i];
