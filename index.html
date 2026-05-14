@@ -414,7 +414,7 @@ body::after {
     </div>
     <h1>TikSave</h1>
     <p>TikTok · YouTube · no watermark · full HD</p>
-    <div class="version-badge">v3.4</div>
+    <div class="version-badge">v3.5</div>
   </div>
 
 
@@ -1214,6 +1214,95 @@ histToggle.addEventListener('click', () => {
   histChevron.classList.toggle('open', open);
 });
 
+/* ── Main YouTube fetch ── */
+async function doFetchYouTube(url) {
+  show(statusEl);
+  const ytId = (url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/) || [])[1] || '';
+
+  try {
+    let result;
+
+    // Stage 1: cobalt 1080p
+    try {
+      statusMsg.textContent = 'Looking for download servers…';
+      result = await tryCobalt(url, '1080', function(s) { statusMsg.textContent = s; });
+      result.quality = '1080p';
+    } catch(e1) {
+      // Stage 2: cobalt 720p
+      try {
+        result = await tryCobalt(url, '720', function(s) { statusMsg.textContent = s; });
+        result.quality = '720p';
+      } catch(e2) {
+        // Stage 3: Invidious (parallel race, up to 720p)
+        if (!ytId) throw new Error('Could not parse video ID from URL.');
+        result = await tryInvidious(ytId, function(s) { statusMsg.textContent = s; });
+      }
+    }
+
+    hdUrl      = result.url;
+    sdUrl      = result.url;
+    audioUrl   = result.audio || '';
+    videoTitle = (result.title  || 'youtube-video').slice(0,60).replace(/[^\w\s-]/g,'').trim() || 'youtube-video';
+    authorName = result.author  || '';
+
+    const thumb = ytId ? 'https://i.ytimg.com/vi/' + ytId + '/hqdefault.jpg' : '';
+    document.getElementById('thumbnail').src     = thumb;
+    document.getElementById('vidTitle').textContent  = result.quality ? 'YouTube — ' + result.quality : 'YouTube Video';
+    document.getElementById('vidAuthor').textContent = authorName || (ytId ? 'youtu.be/' + ytId : 'YouTube');
+    document.getElementById('viewCount').textContent = '—';
+    document.getElementById('likeCount').textContent = '—';
+    document.getElementById('duration').textContent  = '—';
+
+    thumbWrap.style.maxHeight = '180px';
+    hide(slideshowW);
+    show(document.getElementById('dlHD'));
+    show(document.getElementById('dlSD'));
+    hide(sameQNote);
+    document.getElementById('hevcWarn').style.display = 'none';
+
+    if (!isIOS && hdUrl) { pcPrevVid.src = hdUrl; show(pcPreview); } else { hide(pcPreview); }
+
+    const prefix = isIOS ? '📲  ' : '⬇  ';
+    document.getElementById('dlHDText').textContent       = prefix + (isIOS ? 'Save to Photos' : 'Download ' + (result.quality || 'HD'));
+    document.getElementById('dlSDText').textContent       = prefix + (isIOS ? 'Save lower quality' : 'Download lower quality');
+    document.getElementById('dlSectionLabel').textContent = isIOS ? 'Save to Camera Roll' : 'Download';
+    document.getElementById('dlAudioText').textContent    = (isIOS ? '📲  ' : '⬇  ') + 'Audio Only';
+
+    dlHD.disabled    = !hdUrl;
+    dlAudio.disabled = !audioUrl;
+
+    dlSD.disabled = false;
+    dlSD.onclick = async function() {
+      if (dlSD.disabled) return;
+      dlSD.disabled = true;
+      setBarWidth(sdProg, 5);
+      show(statusEl);
+      try {
+        const r = await tryCobalt(url, '720', function(s) { statusMsg.textContent = s; });
+        hide(statusEl);
+        sdUrl = r.url;
+        dlSD.onclick = null;
+        startDownload(sdUrl, 'sd', sdProg, dlSD);
+      } catch(e) {
+        hide(statusEl);
+        dlSD.disabled = false;
+        toast('Could not fetch lower quality: ' + e.message, 'warn');
+      }
+    };
+
+    hide(statusEl); show(resultCard);
+    toast(isIOS ? '✓ Ready — tap above to save' : '✓ Ready — tap to download', isIOS ? 'info' : 'success');
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    saveHistory({ url: url, title: videoTitle || 'YouTube Video', author: authorName, thumbnail: thumb, date: Date.now(), isSlideshow: false, platform: 'youtube' });
+    renderHistory();
+
+  } catch(err) {
+    hide(statusEl);
+    showErr(err.message || 'Could not fetch YouTube video. Check the URL and try again.');
+  }
+}
+
+
 /* ── Tab switching ── */
 const tabTikTok  = document.getElementById('tabTikTok');
 const tabYouTube = document.getElementById('tabYouTube');
@@ -1351,310 +1440,45 @@ async function tryCobalt(ytUrl, quality, onStatus) {
   throw new Error(lastErr || 'all cobalt instances failed');
 }
 
-/* ── Try Invidious instances ── */
+/* ── Try Invidious instances — parallel race ──────────────────────────────
+ * Sequential timeouts compound badly. Instead, fire all instances at once
+ * with Promise.any() and take the first successful response.
+ * Promise.any() is supported on iOS Safari 14+.
+ * ─────────────────────────────────────────────────────────────────────── */
 async function tryInvidious(videoId, onStatus) {
   const instances = await loadInvidiousInstances();
-  let lastErr = '';
-  for (let i = 0; i < instances.length; i++) {
-    const base  = instances[i];
-    const label = new URL(base).hostname;
-    if (onStatus) onStatus(`invidious ${i+1}/${instances.length}: ${label}…`);
-    try {
-      const res = await fetchWithTimeout(
-        base + '/api/v1/videos/' + videoId + '?fields=formatStreams,title,author',
-        { mode: 'cors' }, 7000);
-      if (!res.ok) { lastErr = 'HTTP ' + res.status + ' (' + label + ')'; continue; }
-      const data = await res.json();
-      const streams = (data.formatStreams || []).filter(function(s) { return s.container === 'mp4'; });
-      if (streams.length === 0) { lastErr = 'no mp4 streams (' + label + ')'; continue; }
+  if (onStatus) onStatus('Trying ' + instances.length + ' fallback servers in parallel…');
+
+  const attempt = function(base) {
+    return fetchWithTimeout(
+      base + '/api/v1/videos/' + videoId + '?fields=formatStreams,title,author',
+      { mode: 'cors' },
+      12000  // generous per-instance timeout; parallel so total wait = slowest winner
+    ).then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(data) {
+      var streams = (data.formatStreams || []).filter(function(s) { return s.container === 'mp4'; });
+      if (!streams.length) throw new Error('no mp4 streams');
       return {
-        url:    streams[0].url,
-        audio:  '',
+        url:     streams[0].url,
+        audio:   '',
         quality: streams[0].qualityLabel || '720p',
-        title:  data.title  || '',
-        author: data.author || '',
+        title:   data.title  || '',
+        author:  data.author || '',
       };
-    } catch(e) {
-      lastErr = (e.name === 'AbortError' ? 'timeout' : (e.message || 'fetch failed')) + ' (' + label + ')';
-    }
-  }
-  throw new Error(lastErr || 'all invidious instances failed');
+    });
+  };
+
+  // Race all instances simultaneously — first to succeed wins
+  return Promise.any(instances.map(attempt))
+    .catch(function() {
+      throw new Error('All Invidious servers failed or timed out. Try again later.');
+    });
 }
+
 
 /* ── Main YouTube fetch ── */
-async function doFetchYouTube(url) {
-  show(statusEl);
-  const ytId = (url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/) || [])[1] || '';
-
-  try {
-    let result;
-
-    // Stage 1: cobalt 1080p
-    try {
-      statusMsg.textContent = 'Looking for download servers…';
-      result = await tryCobalt(url, '1080', function(s) { statusMsg.textContent = s; });
-      result.quality = '1080p';
-    } catch(e1) {
-      // Stage 2: cobalt 720p
-      try {
-        result = await tryCobalt(url, '720', function(s) { statusMsg.textContent = s; });
-        result.quality = '720p';
-      } catch(e2) {
-        // Stage 3: Invidious
-        if (!ytId) throw new Error('Could not parse video ID from URL.');
-        result = await tryInvidious(ytId, function(s) { statusMsg.textContent = s; });
-      }
-    }
-
-    hdUrl       = result.url;
-    sdUrl       = result.url;
-    audioUrl    = result.audio || '';
-    videoTitle  = (result.title  || 'youtube-video').slice(0,60).replace(/[^\w\s-]/g,'').trim() || 'youtube-video';
-    authorName  = result.author  || '';
-
-    const thumb = ytId ? 'https://i.ytimg.com/vi/' + ytId + '/hqdefault.jpg' : '';
-    document.getElementById('thumbnail').src     = thumb;
-    document.getElementById('vidTitle').textContent  = (result.quality ? 'YouTube — ' + result.quality : 'YouTube Video');
-    document.getElementById('vidAuthor').textContent = authorName || (ytId ? 'youtu.be/' + ytId : 'YouTube');
-    document.getElementById('viewCount').textContent = '—';
-    document.getElementById('likeCount').textContent = '—';
-    document.getElementById('duration').textContent  = '—';
-
-    thumbWrap.style.maxHeight = '180px';
-    hide(slideshowW);
-    show(document.getElementById('dlHD'));
-    show(document.getElementById('dlSD'));
-    hide(sameQNote);
-    document.getElementById('hevcWarn').style.display = 'none';
-
-    if (!isIOS && hdUrl) { pcPrevVid.src = hdUrl; show(pcPreview); } else { hide(pcPreview); }
-
-    const prefix = isIOS ? '📲  ' : '⬇  ';
-    document.getElementById('dlHDText').textContent       = prefix + (isIOS ? 'Save to Photos' : 'Download ' + (result.quality || 'HD'));
-    document.getElementById('dlSDText').textContent       = prefix + (isIOS ? 'Save lower quality' : 'Download lower quality');
-    document.getElementById('dlSectionLabel').textContent = isIOS ? 'Save to Camera Roll' : 'Download';
-    document.getElementById('dlAudioText').textContent    = (isIOS ? '📲  ' : '⬇  ') + 'Audio Only';
-
-    dlHD.disabled    = !hdUrl;
-    dlAudio.disabled = !audioUrl;
-
-    // SD fetches a separate lower-quality stream on click
-    dlSD.disabled = false;
-    dlSD.onclick = async function() {
-      if (dlSD.disabled) return;
-      dlSD.disabled = true;
-      setBarWidth(sdProg, 5);
-      show(statusEl);
-      try {
-        const r = await tryCobalt(url, '720', function(s) { statusMsg.textContent = s; });
-        hide(statusEl);
-        sdUrl = r.url;
-        dlSD.onclick = null;  // reset to default listener after first fetch
-        startDownload(sdUrl, 'sd', sdProg, dlSD);
-      } catch(e) {
-        hide(statusEl);
-        dlSD.disabled = false;
-        toast('Could not fetch lower quality: ' + e.message, 'warn');
-      }
-    };
-
-    hide(statusEl); show(resultCard);
-    toast(isIOS ? '✓ Ready — tap above to save' : '✓ Ready — tap to download', isIOS ? 'info' : 'success');
-    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    saveHistory({ url, title: videoTitle || 'YouTube Video', author: authorName, thumbnail: thumb, date: Date.now(), isSlideshow: false, platform: 'youtube' });
-    renderHistory();
-
-  } catch(err) {
-    hide(statusEl);
-    showErr(err.message || 'Could not fetch YouTube video. Check the URL and try again.');
-  }
-}
-
-
-
-
-/* ── YouTube download ────────────────────────────────────────────────────────
- * Strategy (in order):
- *   1. cobalt community instances — best quality, up to 1080p
- *   2. Invidious public API      — fallback, up to 720p combined stream
- *
- * fetchWithTimeout wraps fetch() with a manual AbortController so it works
- * on iOS Safari < 16.4 which lacks AbortSignal.timeout.
- * ───────────────────────────────────────────────────────────────────────── */
-
-/* cobalt instances — api.cobalt.tools deliberately excluded (CF-protected) */
-const COBALT_INSTANCES = [
-  'https://cobalt.eientei.org',
-  'https://cobalt.lunar.icu',
-  'https://nyc1.coapi.ggtyler.dev',
-  'https://cobalt.urdh.dev',
-  'https://cob.ftp.sh',
-  'https://cobalt.privacyredirect.com',
-];
-
-/* Invidious instances — loaded dynamically from the official registry so we
- * always get CORS-enabled, currently-online instances. Falls back to a small
- * hardcoded list if the registry itself is unreachable. */
-let _invidiousInstances = null;
-
-
-async function tryCobalt(url, quality, onStatus) {
-  let lastErr = '';
-  for (let i = 0; i < COBALT_INSTANCES.length; i++) {
-    const base  = COBALT_INSTANCES[i];
-    const label = new URL(base).hostname;
-    if (onStatus) onStatus(`Trying server ${i + 1}/${COBALT_INSTANCES.length}: ${label}…`);
-
-    try {
-      const res = await fetchWithTimeout(`${base}/`, {
-        method: 'POST', mode: 'cors',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, videoQuality: quality, downloadMode: 'auto', filenameStyle: 'basic' }),
-      });
-
-      if (!res.ok) { lastErr = `HTTP ${res.status} (${label})`; continue; }
-      const data = await res.json();
-      if (data.status === 'error') { lastErr = `${data.error?.code || 'error'} (${label})`; continue; }
-      if (data.status === 'tunnel' || data.status === 'redirect') return { url: data.url, audio: data.audioUrl || '', quality };
-      if (data.status === 'picker' && data.picker?.length) {
-        const v = data.picker.find(p => p.type === 'video') || data.picker[0];
-        return { url: v.url, audio: data.audio || '', quality };
-      }
-      lastErr = `status "${data.status}" (${label})`;
-    } catch(e) {
-      lastErr = e.name === 'AbortError' ? `timeout (${label})` : `${e.message} (${label})`;
-    }
-  }
-  throw new Error(lastErr || 'all cobalt servers failed');
-}
-
-/* ── Invidious: extract combined stream URL (up to 720p) ── */
-async function tryInvidious(videoId, onStatus) {
-  const instances = await loadInvidiousInstances();
-  let lastErr = '';
-  for (let i = 0; i < instances.length; i++) {
-    const base  = instances[i];
-    const label = new URL(base).hostname;
-    if (onStatus) onStatus(`Fallback server ${i + 1}/${instances.length}: ${label}…`);
-
-    try {
-      const res  = await fetchWithTimeout(
-        `${base}/api/v1/videos/${videoId}?fields=formatStreams,adaptiveFormats,title,author`,
-        { mode: 'cors' }
-      );
-      if (!res.ok) { lastErr = `HTTP ${res.status} (${label})`; continue; }
-      const data = await res.json();
-
-      /* formatStreams = combined video+audio, sorted best-first */
-      const streams = (data.formatStreams || []).filter(s => s.container === 'mp4');
-      if (!streams.length) { lastErr = `no MP4 streams (${label})`; continue; }
-
-      /* pick highest resolution — Invidious sorts descending so first = best */
-      const best = streams[0];
-      return {
-        url: best.url, audio: '', quality: best.qualityLabel || '720p',
-        title: data.title || '', author: data.author || '',
-      };
-    } catch(e) {
-      lastErr = e.name === 'AbortError' ? `timeout (${label})` : `${e.message} (${label})`;
-    }
-  }
-  throw new Error(lastErr || 'all Invidious servers failed');
-}
-
-async function doFetchYouTube(url) {
-  statusMsg.textContent = 'Connecting to download server…';
-  show(statusEl);
-
-  /* Extract video ID for thumbnail + Invidious fallback */
-  const ytId = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/)?.[1] || '';
-
-  try {
-    /* Stage 1: try cobalt at 1080p → 720p */
-    let result;
-    try {
-      result = await tryCobalt(url, '1080', s => { statusMsg.textContent = s; });
-    } catch(e1) {
-      try {
-        result = await tryCobalt(url, '720', s => { statusMsg.textContent = s; });
-      } catch(e2) {
-        /* Stage 2: fall back to Invidious (combined stream, up to 720p) */
-        if (!ytId) throw new Error('Could not extract video ID from URL.');
-        statusMsg.textContent = 'Trying fallback servers…';
-        result = await tryInvidious(ytId, s => { statusMsg.textContent = s; });
-        /* Invidious gives us title/author too */
-        if (result.title)  videoTitle = result.title.slice(0, 60).replace(/[^\w\s-]/g, '').trim() || 'youtube-video';
-        if (result.author) authorName = result.author;
-      }
-    }
-
-    hdUrl    = result.url;
-    sdUrl    = result.url;
-    audioUrl = result.audio || '';
-    // Only reset title/author if Invidious didn't already set them
-    if (!videoTitle || videoTitle === 'youtube-video') videoTitle = 'youtube-video';
-    if (!authorName) authorName = '';
-
-    const thumb = ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : '';
-
-    document.getElementById('thumbnail').src     = thumb;
-    document.getElementById('vidTitle').textContent  = result.quality ? `YouTube Video — ${result.quality}` : 'YouTube Video';
-    document.getElementById('vidAuthor').textContent = ytId ? `youtu.be/${ytId}` : 'YouTube';
-    document.getElementById('viewCount').textContent = '—';
-    document.getElementById('likeCount').textContent = '—';
-    document.getElementById('duration').textContent  = '—';
-
-    thumbWrap.style.maxHeight = '180px';
-    hide(slideshowW);
-    show(document.getElementById('dlHD'));
-    show(document.getElementById('dlSD'));
-    hide(sameQNote);
-    document.getElementById('hevcWarn').style.display = 'none';
-
-    if (!isIOS && hdUrl) { pcPrevVid.src = hdUrl; show(pcPreview); } else { hide(pcPreview); }
-
-    const prefix = isIOS ? '📲  ' : '⬇  ';
-    document.getElementById('dlHDText').textContent = prefix + (isIOS ? 'Save Video (1080p)' : 'Download 1080p');
-    document.getElementById('dlSDText').textContent = prefix + (isIOS ? 'Save Video (720p)'  : 'Download 720p');
-    document.getElementById('dlSectionLabel').textContent = isIOS ? 'Save to Camera Roll' : 'Download';
-
-    dlHD.disabled = !hdUrl;
-    dlSD.disabled = true;  // we'll fetch 720p separately on click
-    document.getElementById('dlAudioText').textContent = (isIOS ? '📲  ' : '⬇  ') + 'Audio Only';
-    dlAudio.disabled = !audioUrl;
-
-    // Store the original URL for re-fetching 720p on SD click
-    dlSD._ytUrl = url;
-    dlSD.onclick = async () => {
-      if (dlSD.disabled) return;
-      dlSD.disabled = true;
-      setBarWidth(sdProg, 5);
-      try {
-        statusMsg.textContent = 'Fetching 720p…';
-        show(statusEl);
-        const r720 = await tryCobalt(url, '720', s => { statusMsg.textContent = s; show(statusEl); });
-        hide(statusEl);
-        sdUrl = r720.url;
-        startDownload(sdUrl, 'sd', sdProg, dlSD);
-      } catch(e) {
-        hide(statusEl);
-        dlSD.disabled = false;
-        toast('Could not fetch 720p: ' + e.message, 'warn');
-      }
-    };
-
-    hide(statusEl); show(resultCard);
-    toast(isIOS ? '✓ Ready — tap above to save' : '✓ Ready — tap to download', isIOS ? 'info' : 'success');
-    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    saveHistory({ url, title: 'YouTube Video', author: '', thumbnail: thumb, date: Date.now(), isSlideshow: false, platform: 'youtube' });
-    renderHistory();
-
-  } catch(err) {
-    hide(statusEl);
-    showErr(err.message || 'Could not fetch YouTube video. Check the URL and try again.');
-  }
-}
 
 /* Init */
 renderHistory();
