@@ -414,7 +414,7 @@ body::after {
     </div>
     <h1>TikSave</h1>
     <p>TikTok · YouTube · no watermark · full HD</p>
-    <div class="version-badge">v3.3</div>
+    <div class="version-badge">v3.4</div>
   </div>
 
 
@@ -1242,6 +1242,263 @@ tabTikTok.addEventListener('click',  () => switchTab('tiktok'));
 tabYouTube.addEventListener('click', () => switchTab('youtube'));
 
 /* ── YouTube download ────────────────────────────────────────────────────────
+ * Two-stage strategy:
+ *   1. cobalt community instances — instances.cobalt.best/api (live, scored)
+ *   2. Invidious public API       — api.invidious.io/instances.json (CORS-filtered)
+ *
+ * Both instance lists are fetched in the background on page load and cached.
+ * fetchWithTimeout uses AbortController (works on all iOS Safari versions).
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+function fetchWithTimeout(url, options, ms) {
+  ms = ms || 7000;
+  const ctrl  = new AbortController();
+  const timer = setTimeout(function() { ctrl.abort(); }, ms);
+  return fetch(url, Object.assign({}, options, { signal: ctrl.signal }))
+    .finally(function() { clearTimeout(timer); });
+}
+
+/* ── cobalt ── */
+var _cobaltReady = null;
+
+function loadCobaltInstances() {
+  if (_cobaltReady) return _cobaltReady;
+  _cobaltReady = fetchWithTimeout('https://instances.cobalt.best/api', { mode: 'cors' }, 6000)
+    .then(function(r) { return r.json(); })
+    .then(function(list) {
+      var instances = list
+        .filter(function(i) {
+          return i.online === true
+            && i.info && i.info.cors === true
+            && i.info.auth === false
+            && i.services && i.services['youtube'] === true;
+        })
+        .sort(function(a, b) { return (b.score || 0) - (a.score || 0); })
+        .map(function(i) { return (i.protocol || 'https') + '://' + i.api; });
+      if (instances.length === 0) throw new Error('no suitable instances');
+      return instances;
+    })
+    .catch(function() {
+      // Hardcoded fallback — verified working, CORS_WILDCARD=1
+      return [
+        'https://cobalt.eientei.org',
+        'https://cobalt.lunar.icu',
+        'https://cobalt.urdh.dev',
+        'https://cob.ftp.sh',
+        'https://cobalt.privacyredirect.com',
+      ];
+    });
+  return _cobaltReady;
+}
+
+/* ── Invidious ── */
+var _invidiousReady = null;
+
+function loadInvidiousInstances() {
+  if (_invidiousReady) return _invidiousReady;
+  _invidiousReady = fetchWithTimeout(
+      'https://api.invidious.io/instances.json?sort_by=health',
+      { mode: 'cors' }, 6000)
+    .then(function(r) { return r.json(); })
+    .then(function(list) {
+      var instances = list
+        .filter(function(entry) {
+          var info = entry[1];
+          return info && info.cors === true && info.api === true && info.type === 'https';
+        })
+        .map(function(entry) { return 'https://' + entry[0]; });
+      if (instances.length === 0) throw new Error('no suitable instances');
+      return instances;
+    })
+    .catch(function() {
+      return [
+        'https://inv.nadeko.net',
+        'https://invidious.f5.si',
+        'https://invidious.privacyredirect.com',
+        'https://iv.datura.network',
+      ];
+    });
+  return _invidiousReady;
+}
+
+/* ── Try cobalt instances ── */
+async function tryCobalt(ytUrl, quality, onStatus) {
+  const instances = await loadCobaltInstances();
+  let lastErr = '';
+  for (let i = 0; i < instances.length; i++) {
+    const base  = instances[i];
+    const label = new URL(base).hostname;
+    if (onStatus) onStatus(`cobalt ${i+1}/${instances.length}: ${label}…`);
+    try {
+      const res = await fetchWithTimeout(base + '/', {
+        method: 'POST', mode: 'cors',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: ytUrl, videoQuality: quality, downloadMode: 'auto' }),
+      }, 7000);
+      if (!res.ok) { lastErr = 'HTTP ' + res.status + ' (' + label + ')'; continue; }
+      const data = await res.json();
+      if (data.status === 'error') { lastErr = (data.error && data.error.code ? data.error.code : 'api error') + ' (' + label + ')'; continue; }
+      if (data.status === 'tunnel' || data.status === 'redirect') return { url: data.url, audio: data.audioUrl || '' };
+      if (data.status === 'picker' && Array.isArray(data.picker) && data.picker.length > 0) {
+        const v = data.picker.find(function(p) { return p.type === 'video'; }) || data.picker[0];
+        return { url: v.url, audio: data.audio || '' };
+      }
+      lastErr = 'status "' + data.status + '" (' + label + ')';
+    } catch(e) {
+      lastErr = (e.name === 'AbortError' ? 'timeout' : (e.message || 'fetch failed')) + ' (' + label + ')';
+    }
+  }
+  throw new Error(lastErr || 'all cobalt instances failed');
+}
+
+/* ── Try Invidious instances ── */
+async function tryInvidious(videoId, onStatus) {
+  const instances = await loadInvidiousInstances();
+  let lastErr = '';
+  for (let i = 0; i < instances.length; i++) {
+    const base  = instances[i];
+    const label = new URL(base).hostname;
+    if (onStatus) onStatus(`invidious ${i+1}/${instances.length}: ${label}…`);
+    try {
+      const res = await fetchWithTimeout(
+        base + '/api/v1/videos/' + videoId + '?fields=formatStreams,title,author',
+        { mode: 'cors' }, 7000);
+      if (!res.ok) { lastErr = 'HTTP ' + res.status + ' (' + label + ')'; continue; }
+      const data = await res.json();
+      const streams = (data.formatStreams || []).filter(function(s) { return s.container === 'mp4'; });
+      if (streams.length === 0) { lastErr = 'no mp4 streams (' + label + ')'; continue; }
+      return {
+        url:    streams[0].url,
+        audio:  '',
+        quality: streams[0].qualityLabel || '720p',
+        title:  data.title  || '',
+        author: data.author || '',
+      };
+    } catch(e) {
+      lastErr = (e.name === 'AbortError' ? 'timeout' : (e.message || 'fetch failed')) + ' (' + label + ')';
+    }
+  }
+  throw new Error(lastErr || 'all invidious instances failed');
+}
+
+/* ── Main YouTube fetch ── */
+async function doFetchYouTube(url) {
+  show(statusEl);
+  const ytId = (url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/) || [])[1] || '';
+
+  try {
+    let result;
+
+    // Stage 1: cobalt 1080p
+    try {
+      statusMsg.textContent = 'Looking for download servers…';
+      result = await tryCobalt(url, '1080', function(s) { statusMsg.textContent = s; });
+      result.quality = '1080p';
+    } catch(e1) {
+      // Stage 2: cobalt 720p
+      try {
+        result = await tryCobalt(url, '720', function(s) { statusMsg.textContent = s; });
+        result.quality = '720p';
+      } catch(e2) {
+        // Stage 3: Invidious
+        if (!ytId) throw new Error('Could not parse video ID from URL.');
+        result = await tryInvidious(ytId, function(s) { statusMsg.textContent = s; });
+      }
+    }
+
+    hdUrl       = result.url;
+    sdUrl       = result.url;
+    audioUrl    = result.audio || '';
+    videoTitle  = (result.title  || 'youtube-video').slice(0,60).replace(/[^\w\s-]/g,'').trim() || 'youtube-video';
+    authorName  = result.author  || '';
+
+    const thumb = ytId ? 'https://i.ytimg.com/vi/' + ytId + '/hqdefault.jpg' : '';
+    document.getElementById('thumbnail').src     = thumb;
+    document.getElementById('vidTitle').textContent  = (result.quality ? 'YouTube — ' + result.quality : 'YouTube Video');
+    document.getElementById('vidAuthor').textContent = authorName || (ytId ? 'youtu.be/' + ytId : 'YouTube');
+    document.getElementById('viewCount').textContent = '—';
+    document.getElementById('likeCount').textContent = '—';
+    document.getElementById('duration').textContent  = '—';
+
+    thumbWrap.style.maxHeight = '180px';
+    hide(slideshowW);
+    show(document.getElementById('dlHD'));
+    show(document.getElementById('dlSD'));
+    hide(sameQNote);
+    document.getElementById('hevcWarn').style.display = 'none';
+
+    if (!isIOS && hdUrl) { pcPrevVid.src = hdUrl; show(pcPreview); } else { hide(pcPreview); }
+
+    const prefix = isIOS ? '📲  ' : '⬇  ';
+    document.getElementById('dlHDText').textContent       = prefix + (isIOS ? 'Save to Photos' : 'Download ' + (result.quality || 'HD'));
+    document.getElementById('dlSDText').textContent       = prefix + (isIOS ? 'Save lower quality' : 'Download lower quality');
+    document.getElementById('dlSectionLabel').textContent = isIOS ? 'Save to Camera Roll' : 'Download';
+    document.getElementById('dlAudioText').textContent    = (isIOS ? '📲  ' : '⬇  ') + 'Audio Only';
+
+    dlHD.disabled    = !hdUrl;
+    dlAudio.disabled = !audioUrl;
+
+    // SD fetches a separate lower-quality stream on click
+    dlSD.disabled = false;
+    dlSD.onclick = async function() {
+      if (dlSD.disabled) return;
+      dlSD.disabled = true;
+      setBarWidth(sdProg, 5);
+      show(statusEl);
+      try {
+        const r = await tryCobalt(url, '720', function(s) { statusMsg.textContent = s; });
+        hide(statusEl);
+        sdUrl = r.url;
+        dlSD.onclick = null;  // reset to default listener after first fetch
+        startDownload(sdUrl, 'sd', sdProg, dlSD);
+      } catch(e) {
+        hide(statusEl);
+        dlSD.disabled = false;
+        toast('Could not fetch lower quality: ' + e.message, 'warn');
+      }
+    };
+
+    hide(statusEl); show(resultCard);
+    toast(isIOS ? '✓ Ready — tap above to save' : '✓ Ready — tap to download', isIOS ? 'info' : 'success');
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    saveHistory({ url, title: videoTitle || 'YouTube Video', author: authorName, thumbnail: thumb, date: Date.now(), isSlideshow: false, platform: 'youtube' });
+    renderHistory();
+
+  } catch(err) {
+    hide(statusEl);
+    showErr(err.message || 'Could not fetch YouTube video. Check the URL and try again.');
+  }
+}
+
+
+/* ── Tab switching ── */
+const tabTikTok  = document.getElementById('tabTikTok');
+const tabYouTube = document.getElementById('tabYouTube');
+
+function switchTab(tab) {
+  currentTab = tab;
+  hide(errorBox); hide(resultCard); hide(toastBar);
+  urlInput.value = '';
+
+  if (tab === 'tiktok') {
+    tabTikTok.classList.add('active');
+    tabYouTube.classList.remove('active');
+    urlInput.placeholder = 'Paste TikTok link…';
+    fetchBtn.style.background = 'linear-gradient(135deg,#ff2d55,#ff6b00)';
+    fetchBtn.style.boxShadow  = '0 4px 20px rgba(255,45,85,.3)';
+  } else {
+    tabYouTube.classList.add('active');
+    tabTikTok.classList.remove('active');
+    urlInput.placeholder = 'Paste YouTube link…';
+    fetchBtn.style.background = 'linear-gradient(135deg,#ff0000,#cc0000)';
+    fetchBtn.style.boxShadow  = '0 4px 20px rgba(255,0,0,.3)';
+  }
+}
+
+tabTikTok.addEventListener('click',  () => switchTab('tiktok'));
+tabYouTube.addEventListener('click', () => switchTab('youtube'));
+
+/* ── YouTube download ────────────────────────────────────────────────────────
  * Strategy (in order):
  *   1. cobalt community instances — best quality, up to 1080p
  *   2. Invidious public API      — fallback, up to 720p combined stream
@@ -1265,41 +1522,7 @@ const COBALT_INSTANCES = [
  * hardcoded list if the registry itself is unreachable. */
 let _invidiousInstances = null;
 
-async function getInvidiousInstances() {
-  if (_invidiousInstances) return _invidiousInstances;
-  try {
-    const res  = await fetchWithTimeout(
-      'https://api.invidious.io/instances.json?sort_by=cors',
-      { mode: 'cors' }, 6000
-    );
-    const list = await res.json();
-    // list = [[hostname, {cors, api, type, ...}], ...]
-    const filtered = list
-      .filter(([, info]) => info.cors === true && info.api === true && info.type === 'https')
-      .map(([host]) => `https://${host}`);
-    if (filtered.length > 0) {
-      _invidiousInstances = filtered;
-      return filtered;
-    }
-  } catch {}
-  // Hardcoded fallback — known CORS-enabled instances
-  _invidiousInstances = [
-    'https://invidious.f5.si',
-    'https://inv.nadeko.net',
-    'https://invidious.privacyredirect.com',
-    'https://iv.datura.network',
-  ];
-  return _invidiousInstances;
-}
 
-function fetchWithTimeout(url, options, ms = 8000) {
-  const ctrl  = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), ms);
-  return fetch(url, { ...options, signal: ctrl.signal })
-    .finally(() => clearTimeout(timer));
-}
-
-/* ── Cobalt: try each instance for a given quality ── */
 async function tryCobalt(url, quality, onStatus) {
   let lastErr = '';
   for (let i = 0; i < COBALT_INSTANCES.length; i++) {
@@ -1461,7 +1684,8 @@ async function doFetchYouTube(url) {
 /* Init */
 renderHistory();
 // Pre-fetch Invidious instances in the background so they're ready when needed
-getInvidiousInstances().catch(() => {});
+loadCobaltInstances();
+loadInvidiousInstances();
 setTimeout(checkClipboard, 800);
 </script>
 </body>
