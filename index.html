@@ -1471,32 +1471,7 @@ async function doFetchYouTube(url) {
 }
 
 
-/* ── Tab switching ── */
-const tabTikTok  = document.getElementById('tabTikTok');
-const tabYouTube = document.getElementById('tabYouTube');
 
-function switchTab(tab) {
-  currentTab = tab;
-  hide(errorBox); hide(resultCard); hide(toastBar);
-  urlInput.value = '';
-
-  if (tab === 'tiktok') {
-    tabTikTok.classList.add('active');
-    tabYouTube.classList.remove('active');
-    urlInput.placeholder = 'Paste TikTok link…';
-    fetchBtn.style.background = 'linear-gradient(135deg,#ff2d55,#ff6b00)';
-    fetchBtn.style.boxShadow  = '0 4px 20px rgba(255,45,85,.3)';
-  } else {
-    tabYouTube.classList.add('active');
-    tabTikTok.classList.remove('active');
-    urlInput.placeholder = 'Paste YouTube link…';
-    fetchBtn.style.background = 'linear-gradient(135deg,#ff0000,#cc0000)';
-    fetchBtn.style.boxShadow  = '0 4px 20px rgba(255,0,0,.3)';
-  }
-}
-
-tabTikTok.addEventListener('click',  () => switchTab('tiktok'));
-tabYouTube.addEventListener('click', () => switchTab('youtube'));
 
 /* ── YouTube download ────────────────────────────────────────────────────────
  * Strategy (in order):
