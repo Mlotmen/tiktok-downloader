@@ -361,7 +361,7 @@ body::after{content:'';position:fixed;bottom:-20%;right:-20%;width:60%;height:60
     </div>
     <h1>TikSave</h1>
     <p>no watermark · full HD · bulk ZIP</p>
-    <div class="version-badge">v4.2</div>
+    <div class="version-badge">v4.3</div>
   </div>
 
   <!-- Single video -->
@@ -838,78 +838,106 @@ document.getElementById('pcClose').addEventListener('click', () => pcOverlay.cla
 const KEEP_MS = 0.012;
 
 function fixAudioDelay(srcBuffer) {
-  const buf  = srcBuffer.slice(0);
-  const u8   = new Uint8Array(buf);
-  const view = new DataView(buf);
+  // Wrap entirely — a malformed box must never crash the download
+  try {
+    const buf  = srcBuffer.slice(0);
+    const u8   = new Uint8Array(buf);
+    const len  = buf.byteLength;
+    const view = new DataView(buf);
 
-  function findBox(start, end, type) {
-    let cur = start;
-    while (cur + 8 <= end) {
-      const sz = view.getUint32(cur, false);
-      if (sz < 8 || cur + sz > end) break;
-      if (u8[cur+4]===type.charCodeAt(0) && u8[cur+5]===type.charCodeAt(1) &&
-          u8[cur+6]===type.charCodeAt(2) && u8[cur+7]===type.charCodeAt(3)) return cur;
+    // Safe read helpers — return 0 / -1 if offset is out of range
+    const safeU32 = (off) => (off + 4 <= len ? view.getUint32(off, false) : 0);
+    const safeI32 = (off) => (off + 4 <= len ? view.getInt32(off,  false) : 0);
+
+    function findBox(start, end, type) {
+      let cur = start;
+      while (cur + 8 <= end && cur + 8 <= len) {
+        const sz = safeU32(cur);
+        if (sz < 8 || cur + sz > end || cur + sz > len) break;
+        if (u8[cur+4]===type.charCodeAt(0) && u8[cur+5]===type.charCodeAt(1) &&
+            u8[cur+6]===type.charCodeAt(2) && u8[cur+7]===type.charCodeAt(3)) return cur;
+        cur += sz;
+      }
+      return -1;
+    }
+
+    // Find moov
+    let moovStart = -1; let cur = 0;
+    while (cur + 8 <= len) {
+      const sz = safeU32(cur);
+      if (sz < 8 || cur + sz > len) break;
+      if (u8[cur+4]===0x6D && u8[cur+5]===0x6F && u8[cur+6]===0x6F && u8[cur+7]===0x76) { moovStart = cur; break; }
       cur += sz;
     }
-    return -1;
-  }
+    if (moovStart === -1) return buf;
+    const moovEnd = Math.min(moovStart + safeU32(moovStart), len);
 
-  let moovStart = -1; let cur = 0;
-  while (cur + 8 <= u8.length) {
-    const sz = view.getUint32(cur, false);
-    if (sz < 8 || cur + sz > u8.length) break;
-    if (u8[cur+4]===0x6D && u8[cur+5]===0x6F && u8[cur+6]===0x6F && u8[cur+7]===0x76) { moovStart = cur; break; }
-    cur += sz;
-  }
-  if (moovStart === -1) return buf;
-  const moovEnd = moovStart + view.getUint32(moovStart, false);
+    // Iterate trak boxes
+    let trakCur = moovStart + 8;
+    while (trakCur + 8 <= moovEnd) {
+      const trakSz = safeU32(trakCur);
+      if (trakSz < 8 || trakCur + trakSz > moovEnd) break;
+      if (u8[trakCur+4]===0x74 && u8[trakCur+5]===0x72 && u8[trakCur+6]===0x61 && u8[trakCur+7]===0x6B) {
+        const trakEnd = trakCur + trakSz;
 
-  let trakCur = moovStart + 8;
-  while (trakCur + 8 <= moovEnd) {
-    const trakSz = view.getUint32(trakCur, false);
-    if (trakSz < 8) break;
-    if (u8[trakCur+4]===0x74 && u8[trakCur+5]===0x72 && u8[trakCur+6]===0x61 && u8[trakCur+7]===0x6B) {
-      const trakEnd = trakCur + trakSz;
-      let timescale = 44100;
-      const mdiaPos = findBox(trakCur + 8, trakEnd, 'mdia');
-      if (mdiaPos !== -1) {
-        const mdiaEnd = mdiaPos + view.getUint32(mdiaPos, false);
-        const mdhdPos = findBox(mdiaPos + 8, mdiaEnd, 'mdhd');
-        if (mdhdPos !== -1) {
-          const mdhdVer = u8[mdhdPos + 8];
-          timescale = view.getUint32(mdhdPos + (mdhdVer === 1 ? 28 : 20), false);
+        // Read timescale from mdhd
+        let timescale = 44100;
+        const mdiaPos = findBox(trakCur + 8, trakEnd, 'mdia');
+        if (mdiaPos !== -1) {
+          const mdiaEnd = Math.min(mdiaPos + safeU32(mdiaPos), trakEnd);
+          const mdhdPos = findBox(mdiaPos + 8, mdiaEnd, 'mdhd');
+          if (mdhdPos !== -1) {
+            const mdhdVer = (mdhdPos + 8 < len) ? u8[mdhdPos + 8] : 0;
+            const tsOff   = mdhdPos + (mdhdVer === 1 ? 28 : 20);
+            if (tsOff + 4 <= len) timescale = safeU32(tsOff) || 44100;
+          }
         }
-      }
-      const residual = Math.round(KEEP_MS * timescale);
-      const edtsPos  = findBox(trakCur + 8, trakEnd, 'edts');
-      if (edtsPos !== -1) {
-        const edtsEnd = edtsPos + view.getUint32(edtsPos, false);
-        const elstPos = findBox(edtsPos + 8, edtsEnd, 'elst');
-        if (elstPos !== -1) {
-          const elstVer    = u8[elstPos + 8];
-          const entryCount = view.getUint32(elstPos + 12, false);
-          let ptr = elstPos + 16;
-          for (let e = 0; e < entryCount; e++) {
-            if (elstVer === 1) {
-              const mtHi = view.getInt32(ptr + 8,  false);
-              const mtLo = view.getUint32(ptr + 12, false);
-              const isEmpty = (mtHi === -1 && mtLo === 0xFFFFFFFF);
-              if (isEmpty) { view.setUint32(ptr+0,0,false); view.setUint32(ptr+4,residual,false); }
-              else if (mtHi < 0) { view.setInt32(ptr+8,0,false); view.setUint32(ptr+12,residual,false); }
-              ptr += 20;
-            } else {
-              const mt = view.getInt32(ptr + 4, false);
-              if (mt === -1)   view.setUint32(ptr+0, residual, false);
-              else if (mt < 0) view.setInt32(ptr+4,  residual, false);
-              ptr += 12;
+        const residual = Math.round(KEEP_MS * timescale);
+
+        // Fix elst
+        const edtsPos = findBox(trakCur + 8, trakEnd, 'edts');
+        if (edtsPos !== -1) {
+          const edtsEnd = Math.min(edtsPos + safeU32(edtsPos), trakEnd);
+          const elstPos = findBox(edtsPos + 8, edtsEnd, 'elst');
+          if (elstPos !== -1) {
+            const elstEnd    = Math.min(elstPos + safeU32(elstPos), edtsEnd);
+            const elstVer    = (elstPos + 8  < len) ? u8[elstPos + 8] : 0;
+            const entryCount = (elstPos + 16 <= len) ? safeU32(elstPos + 12) : 0;
+            const entrySize  = elstVer === 1 ? 20 : 12;
+            let ptr = elstPos + 16;
+
+            for (let e = 0; e < entryCount; e++) {
+              // Bounds-check the full entry before touching any bytes
+              if (ptr + entrySize > elstEnd || ptr + entrySize > len) break;
+
+              if (elstVer === 1) {
+                const mtHi    = safeI32(ptr + 8);
+                const mtLo    = safeU32(ptr + 12);
+                const isEmpty = (mtHi === -1 && mtLo === 0xFFFFFFFF);
+                if (isEmpty) {
+                  view.setUint32(ptr + 0, 0,        false);
+                  view.setUint32(ptr + 4, residual,  false);
+                } else if (mtHi < 0) {
+                  view.setInt32( ptr + 8,  0,        false);
+                  view.setUint32(ptr + 12, residual,  false);
+                }
+              } else {
+                const mt = safeI32(ptr + 4);
+                if (mt === -1)   view.setUint32(ptr + 0, residual, false);
+                else if (mt < 0) view.setInt32( ptr + 4, residual, false);
+              }
+              ptr += entrySize;
             }
           }
         }
       }
+      trakCur += trakSz;
     }
-    trakCur += trakSz;
+    return buf;
+  } catch {
+    // If anything goes wrong, return original buffer untouched
+    return srcBuffer.slice(0);
   }
-  return buf;
 }
 
 /* ── fetchAndFix: stream-fetch + audio fix ── */
