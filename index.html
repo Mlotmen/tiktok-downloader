@@ -361,7 +361,7 @@ body::after{content:'';position:fixed;bottom:-20%;right:-20%;width:60%;height:60
     </div>
     <h1>TikSave</h1>
     <p>no watermark · full HD · bulk ZIP</p>
-    <div class="version-badge">v4.0</div>
+    <div class="version-badge">v4.1</div>
   </div>
 
   <!-- Single video -->
@@ -953,7 +953,7 @@ bulkParseBtn.addEventListener('click', () => {
 
   links.forEach(url => {
     if (!queue.find(q => q.url === url)) {
-      queue.push({ id: ++queueIdCounter, url, status: 'pending', title: url.slice(-20), author: '', thumbnail: '', blob: null, error: '' });
+      queue.push({ id: ++queueIdCounter, url, status: 'pending', title: 'Loading…', author: '', thumbnail: '', blob: null, error: '' });
     }
   });
 
@@ -961,7 +961,31 @@ bulkParseBtn.addEventListener('click', () => {
   renderQueue();
   show(queueSection);
   queueSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Auto-fetch metadata for newly-added pending items so titles/thumbs appear
+  const newItems = queue.filter(q => q.status === 'pending');
+  prefetchQueueMeta(newItems);
 });
+
+async function prefetchQueueMeta(items) {
+  for (const item of items) {
+    if (item.status !== 'pending') continue;
+    try {
+      const meta = await fetchTikTokMeta(item.url);
+      const title  = (meta.title || 'video').slice(0, 50).replace(/[^\w\s-]/g, '').trim() || 'video';
+      updateQueueItem(item.id, {
+        title,
+        author:    meta.author || '',
+        thumbnail: meta.thumbnail || '',
+        // keep status as pending — blob fetched when ZIP is clicked
+        _hdUrl:  meta.hdUrl,
+        _sdUrl:  meta.sdUrl,
+      });
+    } catch {
+      updateQueueItem(item.id, { title: 'Could not load' });
+    }
+  }
+}
 
 function renderQueue() {
   queueList.innerHTML = '';
@@ -987,8 +1011,13 @@ function renderQueue() {
       <div class="queue-status ${statusClass}">${statusIcon}</div>`;
     queueList.appendChild(div);
   });
-  zipBtn.disabled = readyCount === 0;
-  zipBtn.textContent = readyCount > 0 ? `⬇ Download ZIP (${readyCount})` : '⬇ Download ZIP';
+  const pendingCount = queue.filter(q => q.status === 'pending').length;
+  const fetchingCount = queue.filter(q => q.status === 'fetching').length;
+  zipBtn.disabled = queue.length === 0 || fetchingCount > 0;
+  if (fetchingCount > 0)     zipBtn.textContent = `Fetching… (${fetchingCount} left)`;
+  else if (readyCount > 0)   zipBtn.textContent = `⬇ Download ZIP (${readyCount} ready)`;
+  else if (pendingCount > 0) zipBtn.textContent = `⬇ Fetch & Download ZIP (${pendingCount})`;
+  else                       zipBtn.textContent = '⬇ Download ZIP';
 }
 
 function updateQueueItem(id, patch) {
@@ -1010,13 +1039,22 @@ zipBtn.addEventListener('click', async () => {
     updateQueueItem(item.id, { status: 'fetching' });
     const fillEl = document.getElementById('qprogfill-' + item.id);
     try {
-      const meta = await fetchTikTokMeta(item.url);
-      const title  = (meta.title||'video').slice(0,50).replace(/[^\w\s-]/g,'').trim() || 'video';
-      const author = meta.author || '';
-      const url    = meta.hdUrl || meta.sdUrl;
-      if (!url) throw new Error('No downloadable URL');
-      updateQueueItem(item.id, { title, author, thumbnail: meta.thumbnail, status: 'fetching' });
-      const blob = await fetchAndFix(url, pct => { if (fillEl) fillEl.style.width = pct+'%'; }, false);
+      // Use cached meta if prefetch already ran, otherwise fetch now
+      const cachedUrl = item._hdUrl || item._sdUrl;
+      let dlUrl = cachedUrl;
+      let title = item.title && item.title !== 'Loading…' && item.title !== 'Could not load' ? item.title : '';
+      let author = item.author || '';
+      let thumbnail = item.thumbnail || '';
+      if (!dlUrl || !title) {
+        const meta = await fetchTikTokMeta(item.url);
+        title     = (meta.title||'video').slice(0,50).replace(/[^\w\s-]/g,'').trim() || 'video';
+        author    = meta.author || '';
+        thumbnail = meta.thumbnail || '';
+        dlUrl     = meta.hdUrl || meta.sdUrl;
+      }
+      if (!dlUrl) throw new Error('No downloadable URL');
+      updateQueueItem(item.id, { title, author, thumbnail, status: 'fetching' });
+      const blob = await fetchAndFix(dlUrl, pct => { if (fillEl) fillEl.style.width = pct+'%'; }, false);
       updateQueueItem(item.id, { blob, status: 'ready', title, author });
     } catch(err) {
       updateQueueItem(item.id, { status: 'error', error: err.message || 'Failed' });
