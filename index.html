@@ -4,368 +4,316 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>TikSave — HD Downloader</title>
-
-<!-- PWA -->
 <meta name="theme-color" content="#080808">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TikSave">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23ff2d55'/%3E%3Cpath d='M340 96a80 80 0 0 1-62-70V16H221v227a48 48 0 1 1-48-48c4.6 0 9 .6 13 1.7V148a105 105 0 1 0 105 105V141a137 137 0 0 0 80 25.7V109a80 80 0 0 1-31-13z' fill='white'/%3E%3C/svg%3E">
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22TikSave%22%2C%22short_name%22%3A%22TikSave%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23080808%22%2C%22theme_color%22%3A%22%23ff2d55%22%7D">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root {
-  --bg: #080808; --surface: #111; --surface2: #1a1a1a;
-  --border: rgba(255,255,255,0.07);
-  --accent: #ff2d55; --accent2: #ff6b6b;
-  --green: #30d158; --blue: #0a84ff; --orange: #ff9f0a;
-  --text: #f5f5f5; --muted: #666; --radius: 20px;
+  --bg:#080808; --surface:#111; --surface2:#1a1a1a;
+  --border:rgba(255,255,255,.07);
+  --accent:#ff2d55; --accent2:#ff6b6b;
+  --green:#30d158; --blue:#0a84ff;
+  --text:#f5f5f5; --muted:#666; --radius:20px;
 }
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-body {
-  background:var(--bg); color:var(--text);
-  font-family:'Syne',sans-serif;
-  min-height:100dvh;
-  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  overflow-x:hidden;
-}
-body::before {
-  content:''; position:fixed; top:-30%; left:-20%; width:70%; height:70%;
-  background:radial-gradient(circle,rgba(255,45,85,.12) 0%,transparent 70%);
-  pointer-events:none; z-index:0;
-}
-body::after {
-  content:''; position:fixed; bottom:-20%; right:-20%; width:60%; height:60%;
-  background:radial-gradient(circle,rgba(10,132,255,.08) 0%,transparent 70%);
-  pointer-events:none; z-index:0;
-}
-.container { position:relative; z-index:1; max-width:480px; margin:0 auto; padding:24px 20px 60px; }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100dvh;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);overflow-x:hidden}
+body::before{content:'';position:fixed;top:-30%;left:-20%;width:70%;height:70%;
+  background:radial-gradient(circle,rgba(255,45,85,.12) 0%,transparent 70%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;bottom:-20%;right:-20%;width:60%;height:60%;
+  background:radial-gradient(circle,rgba(10,132,255,.08) 0%,transparent 70%);pointer-events:none;z-index:0}
+.container{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:24px 20px 60px}
 
-/* ── Header ── */
-.header { text-align:center; margin-bottom:32px; animation:fadeDown .6s ease both; }
-.logo-mark {
-  display:inline-flex; align-items:center; justify-content:center;
-  width:64px; height:64px;
-  background:linear-gradient(135deg,#ff2d55,#ff6b00);
-  border-radius:18px; margin-bottom:16px;
-  box-shadow:0 8px 32px rgba(255,45,85,.35);
-}
-.logo-mark svg { width:32px; height:32px; fill:white; }
-.header h1 {
-  font-size:28px; font-weight:800; letter-spacing:-.5px;
-  background:linear-gradient(135deg,#fff 30%,#888);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-}
-.header p { font-size:14px; color:var(--muted); margin-top:6px; font-family:'DM Mono',monospace; }
-.version-badge {
-  display:inline-block; margin-top:10px;
-  font-size:10px; font-family:'DM Mono',monospace; font-weight:500;
-  color:rgba(255,255,255,.2); background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.08); border-radius:20px;
-  padding:3px 10px; letter-spacing:1px;
-}
+/* Header */
+.header{text-align:center;margin-bottom:32px;animation:fadeDown .6s ease both}
+.logo-mark{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;
+  background:linear-gradient(135deg,#ff2d55,#ff6b00);border-radius:18px;margin-bottom:16px;
+  box-shadow:0 8px 32px rgba(255,45,85,.35)}
+.logo-mark svg{width:32px;height:32px;fill:white}
+.header h1{font-size:28px;font-weight:800;letter-spacing:-.5px;
+  background:linear-gradient(135deg,#fff 30%,#888);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.header p{font-size:14px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace}
+.version-badge{display:inline-block;margin-top:10px;font-size:10px;font-family:'DM Mono',monospace;
+  color:rgba(255,255,255,.2);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:3px 10px;letter-spacing:1px}
 
-/* ── Card / Input ── */
-.card {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); padding:20px; margin-bottom:16px;
-  animation:fadeUp .6s ease both;
-}
-.card-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:12px; }
-.input-row { display:flex; gap:10px; align-items:stretch; }
-.url-input {
-  flex:1; background:var(--surface2); border:1px solid var(--border);
-  border-radius:12px; padding:14px 16px; color:var(--text);
-  font-family:'DM Mono',monospace; font-size:13px; outline:none;
-  transition:border-color .2s; -webkit-appearance:none;
-}
-.url-input:focus { border-color:rgba(255,45,85,.4); }
-.url-input::placeholder { color:var(--muted); }
-.paste-btn {
-  background:var(--surface2); border:1px solid var(--border); border-radius:12px;
-  padding:0 16px; color:var(--accent);
-  font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
-  cursor:pointer; white-space:nowrap; transition:all .15s; -webkit-appearance:none;
-}
-.paste-btn:active { transform:scale(.96); background:rgba(255,45,85,.1); }
-.fetch-btn {
-  width:100%; margin-top:14px;
-  background:linear-gradient(135deg,#ff2d55,#ff6b00);
-  border:none; border-radius:14px; padding:16px; color:white;
-  font-family:'Syne',sans-serif; font-size:16px; font-weight:800;
-  cursor:pointer; letter-spacing:.3px; transition:all .2s;
-  box-shadow:0 4px 20px rgba(255,45,85,.3); -webkit-appearance:none;
-}
-.fetch-btn:active { transform:scale(.98); }
-.fetch-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin-bottom:16px;animation:fadeUp .6s ease both}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--muted);margin-bottom:12px}
+.input-row{display:flex;gap:10px;align-items:stretch}
+.url-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;
+  outline:none;transition:border-color .2s;-webkit-appearance:none}
+.url-input:focus{border-color:rgba(255,45,85,.4)}
+.url-input::placeholder{color:var(--muted)}
+.paste-btn{background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:0 16px;color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:all .15s;-webkit-appearance:none}
+.paste-btn:active{transform:scale(.96);background:rgba(255,45,85,.1)}
+.fetch-btn{width:100%;margin-top:14px;background:linear-gradient(135deg,#ff2d55,#ff6b00);
+  border:none;border-radius:14px;padding:16px;color:white;font-family:'Syne',sans-serif;
+  font-size:16px;font-weight:800;cursor:pointer;letter-spacing:.3px;transition:all .2s;
+  box-shadow:0 4px 20px rgba(255,45,85,.3);-webkit-appearance:none}
+.fetch-btn:active{transform:scale(.98)}
+.fetch-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
 /* Clipboard hint */
-.clipboard-hint {
-  display:none; margin-top:10px; padding:10px 14px;
-  background:rgba(255,45,85,.07); border:1px solid rgba(255,45,85,.18);
-  border-radius:10px; font-size:12px; color:rgba(255,150,150,.9);
-  font-family:'DM Mono',monospace; cursor:pointer; transition:all .15s;
-}
-.clipboard-hint:active { background:rgba(255,45,85,.12); }
+.clipboard-hint{display:none;margin-top:10px;padding:10px 14px;
+  background:rgba(255,45,85,.07);border:1px solid rgba(255,45,85,.18);border-radius:10px;
+  font-size:12px;color:rgba(255,150,150,.9);font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s}
+.clipboard-hint:active{background:rgba(255,45,85,.12)}
 
-/* ── Status ── */
-.status { display:none; text-align:center; padding:20px; animation:fadeUp .4s ease both; }
-.spinner {
-  width:36px; height:36px;
-  border:3px solid var(--border); border-top-color:var(--accent);
-  border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 12px;
-}
-.status p { color:var(--muted); font-size:14px; }
+/* Bulk card */
+.bulk-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin-bottom:16px;animation:fadeUp .65s ease both}
+.bulk-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.bulk-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;
+  color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.bulk-toggle:hover{border-color:rgba(255,45,85,.3);color:var(--accent)}
+.bulk-body{display:none}
+.bulk-body.open{display:block}
+.bulk-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;
+  outline:none;resize:vertical;min-height:100px;transition:border-color .2s;-webkit-appearance:none;
+  line-height:1.6}
+.bulk-textarea:focus{border-color:rgba(255,45,85,.4)}
+.bulk-textarea::placeholder{color:var(--muted)}
+.bulk-parse-btn{width:100%;margin-top:12px;background:var(--surface2);border:1px solid rgba(255,45,85,.3);
+  border-radius:12px;padding:13px;color:var(--accent);font-family:'Syne',sans-serif;font-size:14px;
+  font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none}
+.bulk-parse-btn:active{transform:scale(.98);background:rgba(255,45,85,.1)}
 
-/* ── Error ── */
-.error-box {
-  display:none; background:rgba(255,45,85,.07); border:1px solid rgba(255,45,85,.2);
-  border-radius:14px; padding:16px 20px; margin-bottom:16px;
-  animation:fadeUp .4s ease both;
-}
-.error-box p { font-size:14px; color:#ff6b6b; margin-bottom:12px; }
-.retry-btn {
-  background:rgba(255,45,85,.15); border:1px solid rgba(255,45,85,.3);
-  border-radius:10px; padding:9px 18px; color:var(--accent);
-  font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
-  cursor:pointer; -webkit-appearance:none; transition:all .15s;
-}
-.retry-btn:active { transform:scale(.97); }
+/* Queue */
+.queue-section{display:none;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;margin-bottom:16px;animation:fadeUp .5s ease both}
+.queue-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+  border-bottom:1px solid var(--border)}
+.queue-title{font-size:13px;font-weight:700;color:var(--text)}
+.queue-count{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-left:6px}
+.zip-btn{background:linear-gradient(135deg,rgba(48,209,88,.15),rgba(48,209,88,.05));
+  border:1px solid rgba(48,209,88,.3);border-radius:10px;padding:8px 16px;
+  color:var(--green);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;-webkit-appearance:none;transition:all .2s;white-space:nowrap}
+.zip-btn:disabled{opacity:.35;cursor:not-allowed}
+.zip-btn:not(:disabled):active{transform:scale(.97)}
+.zip-btn.loading{opacity:.7;cursor:not-allowed}
+.queue-list{max-height:360px;overflow-y:auto}
+.queue-item{display:flex;align-items:center;gap:12px;padding:12px 20px;
+  border-bottom:1px solid var(--border)}
+.queue-item:last-child{border-bottom:none}
+.queue-thumb{width:36px;height:36px;border-radius:7px;object-fit:cover;
+  background:var(--surface2);flex-shrink:0}
+.queue-info{flex:1;min-width:0}
+.queue-title-text{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.queue-sub{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:2px}
+.queue-status{flex-shrink:0;font-size:20px;line-height:1}
+.queue-status.pending  {color:var(--muted)}
+.queue-status.fetching {color:var(--blue);animation:spin .8s linear infinite;display:inline-block}
+.queue-status.ready    {color:var(--green)}
+.queue-status.error    {color:var(--accent)}
+.queue-progress{width:100%;height:2px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:4px;overflow:hidden}
+.queue-progress-fill{height:100%;background:linear-gradient(90deg,#ff2d55,#ff6b00);border-radius:2px;
+  width:0%;transition:width .2s ease}
+.queue-clear{display:block;width:100%;padding:12px;background:none;border:none;border-top:1px solid var(--border);
+  color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;
+  text-align:center;transition:color .15s}
+.queue-clear:hover{color:var(--accent)}
 
-/* ── Result card ── */
-.result-card { display:none; animation:fadeUp .5s ease both; }
-.video-info {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); overflow:hidden; margin-bottom:12px;
-}
-.thumb-wrap {
-  position:relative; width:100%; aspect-ratio:9/16;
-  background:#000; overflow:hidden; max-height:300px;
-}
-.thumb-wrap img { width:100%; height:100%; object-fit:cover; opacity:.85; }
-.thumb-overlay {
-  position:absolute; inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 50%);
-  display:flex; align-items:flex-end; padding:20px;
-}
-.vid-title { font-size:14px; font-weight:700; line-height:1.4; text-shadow:0 1px 4px rgba(0,0,0,.5); }
-.vid-author { font-size:12px; color:rgba(255,255,255,.7); margin-top:4px; font-family:'DM Mono',monospace; }
-.vid-meta {
-  padding:14px 20px; display:flex; gap:16px;
-  border-bottom:1px solid var(--border);
-}
-.meta-pill { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; }
-.meta-pill svg { width:14px; height:14px; opacity:.6; }
-.meta-pill span { color:var(--text); font-weight:500; }
+/* Status */
+.status{display:none;text-align:center;padding:20px;animation:fadeUp .4s ease both}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+.status p{color:var(--muted);font-size:14px}
 
-/* PC inline video preview */
-.pc-preview {
-  display:none; padding:16px 20px 0;
-}
-.pc-preview video {
-  width:100%; border-radius:12px; background:#000;
-  max-height:280px; outline:none;
-}
-.pc-preview-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:10px; }
+/* Error */
+.error-box{display:none;background:rgba(255,45,85,.07);border:1px solid rgba(255,45,85,.2);
+  border-radius:14px;padding:16px 20px;margin-bottom:16px;animation:fadeUp .4s ease both}
+.error-box p{font-size:14px;color:#ff6b6b;margin-bottom:12px}
+.retry-btn{background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);border-radius:10px;
+  padding:9px 18px;color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.retry-btn:active{transform:scale(.97)}
 
-/* Slideshow grid */
-.slideshow-wrap { display:none; padding:16px 20px 0; }
-.slideshow-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:10px; }
-.slides-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
-.slide-item { position:relative; aspect-ratio:9/16; border-radius:10px; overflow:hidden; cursor:pointer; }
-.slide-item img { width:100%; height:100%; object-fit:cover; }
-.slide-dl-btn {
-  position:absolute; bottom:6px; right:6px;
-  background:rgba(0,0,0,.7); border:none; border-radius:6px;
-  color:white; font-size:11px; font-weight:700;
-  padding:4px 8px; cursor:pointer; -webkit-appearance:none;
-  font-family:'Syne',sans-serif;
-}
+/* Result card */
+.result-card{display:none;animation:fadeUp .5s ease both}
+.video-info{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:12px}
+.thumb-wrap{position:relative;width:100%;aspect-ratio:9/16;background:#000;overflow:hidden;max-height:300px}
+.thumb-wrap img{width:100%;height:100%;object-fit:cover;opacity:.85}
+.thumb-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 50%);
+  display:flex;align-items:flex-end;padding:20px}
+.vid-title{font-size:14px;font-weight:700;line-height:1.4;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.vid-author{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px;font-family:'DM Mono',monospace}
+.vid-meta{padding:14px 20px;display:flex;gap:16px;border-bottom:1px solid var(--border)}
+.meta-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
+.meta-pill svg{width:14px;height:14px;opacity:.6}
+.meta-pill span{color:var(--text);font-weight:500}
+
+/* PC preview */
+.pc-preview{display:none;padding:16px 20px 0}
+.pc-preview video{width:100%;border-radius:12px;background:#000;max-height:280px;outline:none}
+.pc-preview-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--muted);margin-bottom:10px}
+
+/* Slideshow */
+.slideshow-wrap{display:none;padding:16px 20px 0}
+.slideshow-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--muted);margin-bottom:10px}
+.slides-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.slide-item{position:relative;aspect-ratio:9/16;border-radius:10px;overflow:hidden;cursor:pointer}
+.slide-item img{width:100%;height:100%;object-fit:cover}
+.slide-dl-btn{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.7);border:none;
+  border-radius:6px;color:white;font-size:11px;font-weight:700;padding:4px 8px;
+  cursor:pointer;-webkit-appearance:none;font-family:'Syne',sans-serif}
 
 /* Download section */
-.download-section { padding:16px 20px; }
-.dl-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:10px; }
-.dl-btn {
-  display:flex; align-items:center; justify-content:space-between;
-  width:100%; background:var(--surface2); border:1px solid var(--border);
-  border-radius:14px; padding:14px 18px; color:var(--text);
-  font-family:'Syne',sans-serif; font-size:15px; font-weight:700;
-  cursor:pointer; margin-bottom:8px; transition:all .2s;
-  -webkit-appearance:none; overflow:hidden; position:relative;
-}
-.dl-btn.primary {
-  background:linear-gradient(135deg,rgba(255,45,85,.15),rgba(255,107,0,.1));
-  border-color:rgba(255,45,85,.25); color:var(--accent2);
-}
-.dl-btn.audio-btn {
-  background:linear-gradient(135deg,rgba(10,132,255,.12),rgba(10,132,255,.05));
-  border-color:rgba(10,132,255,.25); color:#6eb3ff;
-}
-.dl-btn:active { transform:scale(.98); }
-.dl-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
-.dl-btn .badge {
-  font-size:11px; font-family:'DM Mono',monospace; font-weight:500;
-  background:rgba(255,255,255,.08); border-radius:6px; padding:3px 8px;
-  color:var(--muted); white-space:nowrap; flex-shrink:0;
-}
-.dl-btn.primary .badge { background:rgba(255,45,85,.15); color:var(--accent); }
-.dl-btn.audio-btn .badge { background:rgba(10,132,255,.15); color:var(--blue); }
-.dl-btn .progress-bg {
-  position:absolute; top:0; left:0; height:100%; width:0%;
-  background:rgba(255,255,255,.04); transition:width .25s ease; z-index:0;
-}
-.dl-btn.primary .progress-bg { background:rgba(255,45,85,.07); }
-.dl-btn.audio-btn .progress-bg { background:rgba(10,132,255,.07); }
-.dl-btn .btn-content { position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; width:100%; gap:10px; }
-
-/* Same quality notice */
-.same-quality-note {
-  display:none; font-size:11px; color:var(--muted);
-  font-family:'DM Mono',monospace; text-align:center;
-  margin-top:-4px; margin-bottom:8px; padding:6px 0;
-  opacity:.7;
-}
+.download-section{padding:16px 20px}
+.dl-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--muted);margin-bottom:10px}
+.dl-btn{display:flex;align-items:center;justify-content:space-between;width:100%;
+  background:var(--surface2);border:1px solid var(--border);border-radius:14px;
+  padding:14px 18px;color:var(--text);font-family:'Syne',sans-serif;font-size:15px;
+  font-weight:700;cursor:pointer;margin-bottom:8px;transition:all .2s;
+  -webkit-appearance:none;overflow:hidden;position:relative}
+.dl-btn.primary{background:linear-gradient(135deg,rgba(255,45,85,.15),rgba(255,107,0,.1));
+  border-color:rgba(255,45,85,.25);color:var(--accent2)}
+.dl-btn.audio-btn{background:linear-gradient(135deg,rgba(10,132,255,.12),rgba(10,132,255,.05));
+  border-color:rgba(10,132,255,.25);color:#6eb3ff}
+.dl-btn:active{transform:scale(.98)}
+.dl-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.dl-btn .badge{font-size:11px;font-family:'DM Mono',monospace;font-weight:500;
+  background:rgba(255,255,255,.08);border-radius:6px;padding:3px 8px;color:var(--muted);
+  white-space:nowrap;flex-shrink:0}
+.dl-btn.primary .badge{background:rgba(255,45,85,.15);color:var(--accent)}
+.dl-btn.audio-btn .badge{background:rgba(10,132,255,.15);color:var(--blue)}
+.dl-btn .progress-bg{position:absolute;top:0;left:0;height:100%;width:0%;
+  background:rgba(255,255,255,.04);transition:width .25s ease;z-index:0}
+.dl-btn.primary .progress-bg{background:rgba(255,45,85,.07)}
+.dl-btn .btn-content{position:relative;z-index:1;display:flex;align-items:center;
+  justify-content:space-between;width:100%;gap:10px}
+.same-quality-note{display:none;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;
+  text-align:center;margin-top:-4px;margin-bottom:8px;padding:6px 0;opacity:.7}
+.hevc-warn{display:none;margin-top:-4px;margin-bottom:8px;padding:9px 14px;
+  background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.2);border-radius:10px;
+  font-size:12px;color:#ffb340;font-family:'DM Mono',monospace;line-height:1.5}
 
 /* Toast */
-.toast-bar {
-  display:none; border-radius:12px; padding:12px 16px; font-size:13px;
-  margin-top:8px; text-align:center; animation:fadeUp .3s ease both;
-  line-height:1.5; font-family:'DM Mono',monospace;
-}
-.toast-bar.success { background:rgba(48,209,88,.1); border:1px solid rgba(48,209,88,.2); color:var(--green); }
-.toast-bar.info    { background:rgba(10,132,255,.08); border:1px solid rgba(10,132,255,.2); color:#6eb3ff; }
-.toast-bar.warn    { background:rgba(255,159,10,.08); border:1px solid rgba(255,159,10,.2); color:#ffb340; }
+.toast-bar{display:none;border-radius:12px;padding:12px 16px;font-size:13px;margin-top:8px;
+  text-align:center;animation:fadeUp .3s ease both;line-height:1.5;font-family:'DM Mono',monospace}
+.toast-bar.success{background:rgba(48,209,88,.1);border:1px solid rgba(48,209,88,.2);color:var(--green)}
+.toast-bar.info{background:rgba(10,132,255,.08);border:1px solid rgba(10,132,255,.2);color:#6eb3ff}
+.toast-bar.warn{background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.2);color:#ffb340}
 
-/* ── iOS Modal ── */
-.ios-modal {
-  display:none; position:fixed; inset:0; z-index:200;
-  background:rgba(0,0,0,.97); flex-direction:column;
-  padding:env(safe-area-inset-top,16px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,16px) env(safe-area-inset-left,0);
-}
-.ios-modal.open { display:flex; animation:fadeIn .25s ease both; }
-.ios-modal-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:16px 20px 10px; flex-shrink:0;
-}
-.ios-modal-title { font-size:17px; font-weight:800; }
-.ios-close-btn {
-  width:34px; height:34px; background:rgba(255,255,255,.1);
-  border:none; border-radius:50%; color:var(--text); font-size:16px;
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; -webkit-appearance:none; line-height:1; flex-shrink:0;
-}
-.ios-loading { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px; }
-.ios-spinner { width:44px; height:44px; border:3px solid rgba(255,255,255,.1); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
-.ios-loading p { color:var(--muted); font-size:14px; font-family:'DM Mono',monospace; }
-.ios-load-track { width:200px; height:4px; background:rgba(255,255,255,.08); border-radius:4px; overflow:hidden; }
-.ios-load-fill { height:100%; width:0%; background:linear-gradient(90deg,#ff2d55,#ff6b00); border-radius:4px; transition:width .25s ease; }
-.ios-ready { display:flex; flex-direction:column; min-height:0; }
-.ios-video-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:8px 20px; overflow:hidden; min-height:0; }
-.ios-video-wrap video { max-width:100%; max-height:100%; border-radius:14px; background:#000; box-shadow:0 8px 40px rgba(0,0,0,.6); display:block; }
-.ios-save-hint {
-  flex-shrink:0; margin:10px 16px 8px;
-  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
-  border-radius:16px; padding:14px 16px;
-}
-.ios-share-btn {
-  width:100%; margin-bottom:14px;
-  background:linear-gradient(135deg,#0a84ff,#0060df);
-  border:none; border-radius:14px; padding:14px 20px; color:white;
-  font-family:'Syne',sans-serif; font-size:15px; font-weight:800;
-  cursor:pointer; -webkit-appearance:none;
-  display:flex; align-items:center; justify-content:center; gap:10px;
-  box-shadow:0 4px 20px rgba(10,132,255,.3); transition:all .15s;
-}
-.ios-share-btn:active { transform:scale(.98); }
-.ios-divider {
-  text-align:center; font-size:11px; color:var(--muted);
-  font-family:'DM Mono',monospace; margin-bottom:12px; position:relative;
-}
-.ios-divider::before,.ios-divider::after { content:''; position:absolute; top:50%; width:28%; height:1px; background:var(--border); }
-.ios-divider::before { left:0; } .ios-divider::after { right:0; }
-.ios-steps { display:flex; flex-direction:column; gap:8px; }
-.ios-step-row { display:flex; align-items:center; gap:10px; font-size:12px; color:rgba(255,255,255,.6); font-family:'DM Mono',monospace; }
-.ios-step-num {
-  width:20px; height:20px; border-radius:6px;
-  background:rgba(255,45,85,.2); color:var(--accent);
-  font-size:10px; font-weight:800;
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; font-family:'Syne',sans-serif;
-}
+/* iOS Modal */
+.ios-modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.97);
+  flex-direction:column;padding:env(safe-area-inset-top,16px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,16px) env(safe-area-inset-left,0)}
+.ios-modal.open{display:flex;animation:fadeIn .25s ease both}
+.ios-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px;flex-shrink:0}
+.ios-modal-title{font-size:17px;font-weight:800}
+.ios-close-btn{width:34px;height:34px;background:rgba(255,255,255,.1);border:none;border-radius:50%;
+  color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-appearance:none;line-height:1;flex-shrink:0}
+.ios-loading{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px}
+.ios-spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite}
+.ios-loading p{color:var(--muted);font-size:14px;font-family:'DM Mono',monospace}
+.ios-load-track{width:200px;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.ios-load-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff2d55,#ff6b00);border-radius:4px;transition:width .25s ease}
+.ios-ready{display:flex;flex-direction:column;min-height:0}
+.ios-video-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 20px;overflow:hidden;min-height:0}
+.ios-video-wrap video{max-width:100%;max-height:100%;border-radius:14px;background:#000;box-shadow:0 8px 40px rgba(0,0,0,.6);display:block}
+.ios-save-hint{flex-shrink:0;margin:10px 16px 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:14px 16px}
+.ios-share-btn{width:100%;margin-bottom:14px;background:linear-gradient(135deg,#0a84ff,#0060df);
+  border:none;border-radius:14px;padding:14px 20px;color:white;font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:800;cursor:pointer;-webkit-appearance:none;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 4px 20px rgba(10,132,255,.3);transition:all .15s}
+.ios-share-btn:active{transform:scale(.98)}
+.ios-divider{text-align:center;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px;position:relative}
+.ios-divider::before,.ios-divider::after{content:'';position:absolute;top:50%;width:28%;height:1px;background:var(--border)}
+.ios-divider::before{left:0}.ios-divider::after{right:0}
+.ios-steps{display:flex;flex-direction:column;gap:8px}
+.ios-step-row{display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace}
+.ios-step-num{width:20px;height:20px;border-radius:6px;background:rgba(255,45,85,.2);color:var(--accent);
+  font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Syne',sans-serif}
 
-/* ── PC Success Overlay ── */
-.pc-overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.8); align-items:center; justify-content:center; }
-.pc-overlay.open { display:flex; animation:fadeIn .25s ease both; }
-.pc-box { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:36px 28px; text-align:center; max-width:320px; width:90%; animation:scaleIn .3s ease both; }
-.pc-icon { width:60px; height:60px; background:linear-gradient(135deg,rgba(48,209,88,.15),rgba(48,209,88,.05)); border:1px solid rgba(48,209,88,.3); border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 18px; font-size:26px; }
-.pc-box h3 { font-size:19px; font-weight:800; margin-bottom:8px; }
-.pc-box p { font-size:13px; color:var(--muted); font-family:'DM Mono',monospace; line-height:1.65; }
-.pc-close-btn { margin-top:22px; width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:12px; color:var(--text); font-family:'Syne',sans-serif; font-size:14px; font-weight:700; cursor:pointer; -webkit-appearance:none; transition:all .15s; }
-.pc-close-btn:hover { background:rgba(255,255,255,.06); }
+/* PC Overlay */
+.pc-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);align-items:center;justify-content:center}
+.pc-overlay.open{display:flex;animation:fadeIn .25s ease both}
+.pc-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:36px 28px;
+  text-align:center;max-width:320px;width:90%;animation:scaleIn .3s ease both}
+.pc-icon{width:60px;height:60px;background:linear-gradient(135deg,rgba(48,209,88,.15),rgba(48,209,88,.05));
+  border:1px solid rgba(48,209,88,.3);border-radius:18px;display:flex;align-items:center;
+  justify-content:center;margin:0 auto 18px;font-size:26px}
+.pc-box h3{font-size:19px;font-weight:800;margin-bottom:8px}
+.pc-box p{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;line-height:1.65}
+.pc-close-btn{margin-top:22px;width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;padding:12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;
+  font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.pc-close-btn:hover{background:rgba(255,255,255,.06)}
 
-/* ── History section ── */
-.history-section {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); overflow:hidden; margin-top:16px;
-  animation:fadeUp .8s ease both;
-}
-.history-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:16px 20px; cursor:pointer; user-select:none;
-}
-.history-header h2 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); }
-.history-chevron { color:var(--muted); font-size:12px; transition:transform .25s; }
-.history-chevron.open { transform:rotate(180deg); }
-.history-body { display:none; border-top:1px solid var(--border); }
-.history-body.open { display:block; }
-.history-empty { padding:20px; text-align:center; font-size:13px; color:var(--muted); font-family:'DM Mono',monospace; }
-.history-item {
-  display:flex; align-items:center; gap:14px;
-  padding:12px 20px; border-bottom:1px solid var(--border);
-  transition:background .15s; cursor:pointer;
-}
-.history-item:last-child { border-bottom:none; }
-.history-item:hover { background:rgba(255,255,255,.02); }
-.history-thumb { width:40px; height:40px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(--surface2); }
-.history-info { flex:1; min-width:0; }
-.history-title { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.history-meta { font-size:11px; color:var(--muted); font-family:'DM Mono',monospace; margin-top:2px; }
-.history-reuse {
-  flex-shrink:0; background:rgba(255,45,85,.1); border:1px solid rgba(255,45,85,.2);
-  border-radius:8px; padding:5px 10px; color:var(--accent);
-  font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
-  cursor:pointer; -webkit-appearance:none; white-space:nowrap;
-}
-.history-clear { display:block; width:100%; padding:12px; background:none; border:none; color:var(--muted); font-family:'DM Mono',monospace; font-size:12px; cursor:pointer; text-align:center; border-top:1px solid var(--border); transition:color .15s; }
-.history-clear:hover { color:var(--accent); }
+/* History */
+.history-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-top:16px;animation:fadeUp .8s ease both}
+.history-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;user-select:none}
+.history-header h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+.history-chevron{color:var(--muted);font-size:12px;transition:transform .25s}
+.history-chevron.open{transform:rotate(180deg)}
+.history-body{display:none;border-top:1px solid var(--border)}
+.history-body.open{display:block}
+.history-empty{padding:20px;text-align:center;font-size:13px;color:var(--muted);font-family:'DM Mono',monospace}
+.history-item{display:flex;align-items:center;gap:14px;padding:12px 20px;
+  border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
+.history-item:last-child{border-bottom:none}
+.history-item:hover{background:rgba(255,255,255,.02)}
+.history-thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--surface2)}
+.history-info{flex:1;min-width:0}
+.history-title-text{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-meta-text{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px}
+.history-reuse{flex-shrink:0;background:rgba(255,45,85,.1);border:1px solid rgba(255,45,85,.2);
+  border-radius:8px;padding:5px 10px;color:var(--accent);font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none;white-space:nowrap}
+.history-clear{display:block;width:100%;padding:12px;background:none;border:none;color:var(--muted);
+  font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;text-align:center;
+  border-top:1px solid var(--border);transition:color .15s}
+.history-clear:hover{color:var(--accent)}
 
-/* ── Instructions ── */
-.instructions { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-top:16px; animation:fadeUp .7s ease both; }
-.instructions h2 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:16px; }
-.step { display:flex; gap:14px; margin-bottom:14px; align-items:flex-start; }
-.step:last-child { margin-bottom:0; }
-.step-num { flex-shrink:0; width:28px; height:28px; background:linear-gradient(135deg,#ff2d55,#ff6b00); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:white; }
-.step-text { padding-top:3px; }
-.step-text strong { display:block; font-size:14px; font-weight:700; margin-bottom:2px; }
-.step-text p { font-size:13px; color:var(--muted); line-height:1.5; font-family:'DM Mono',monospace; }
-.platform-note { margin-top:16px; padding:14px 16px; background:var(--surface2); border-radius:12px; }
-.note-row { display:flex; gap:10px; font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; margin-bottom:8px; line-height:1.5; align-items:flex-start; }
-.note-row:last-child { margin-bottom:0; }
-.note-label { font-weight:700; color:rgba(255,255,255,.35); white-space:nowrap; flex-shrink:0; }
+/* Instructions */
+.instructions{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin-top:16px;animation:fadeUp .7s ease both}
+.instructions h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:16px}
+.step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+.step:last-child{margin-bottom:0}
+.step-num{flex-shrink:0;width:28px;height:28px;background:linear-gradient(135deg,#ff2d55,#ff6b00);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white}
+.step-text{padding-top:3px}
+.step-text strong{display:block;font-size:14px;font-weight:700;margin-bottom:2px}
+.step-text p{font-size:13px;color:var(--muted);line-height:1.5;font-family:'DM Mono',monospace}
+.platform-note{margin-top:16px;padding:14px 16px;background:var(--surface2);border-radius:12px}
+.note-row{display:flex;gap:10px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;
+  margin-bottom:8px;line-height:1.5;align-items:flex-start}
+.note-row:last-child{margin-bottom:0}
+.note-label{font-weight:700;color:rgba(255,255,255,.35);white-space:nowrap;flex-shrink:0}
 
-/* ── Animations ── */
-@keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
-@keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
-@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
-@keyframes scaleIn  { from{opacity:0;transform:scale(.92)} to{opacity:1;transform:scale(1)} }
-@keyframes spin     { to{transform:rotate(360deg)} }
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
-<!-- ══ iOS Modal ══ -->
+<!-- iOS Modal -->
 <div class="ios-modal" id="iosModal">
   <div class="ios-modal-header">
     <span class="ios-modal-title">Save to Photos</span>
@@ -376,7 +324,7 @@ body::after {
     <p id="iosLoadingMsg">Downloading video…</p>
     <div class="ios-load-track"><div class="ios-load-fill" id="iosLoadFill"></div></div>
   </div>
-  <div class="ios-ready" id="iosReady" style="display:none;flex:1;flex-direction:column;min-height:0;">
+  <div class="ios-ready" id="iosReady" style="display:none;flex:1;flex-direction:column;min-height:0">
     <div class="ios-video-wrap">
       <video id="iosVideo" playsinline controls preload="auto" webkit-playsinline></video>
     </div>
@@ -395,52 +343,63 @@ body::after {
   </div>
 </div>
 
-<!-- ══ PC Success Overlay ══ -->
+<!-- PC Overlay -->
 <div class="pc-overlay" id="pcOverlay">
   <div class="pc-box">
     <div class="pc-icon">✓</div>
     <h3>Download started!</h3>
-    <p>The file is downloading to your <strong>Downloads</strong> folder. Check your browser's download bar.</p>
+    <p>The file is downloading to your <strong>Downloads</strong> folder.</p>
     <button class="pc-close-btn" id="pcClose">Got it</button>
   </div>
 </div>
 
 <div class="container">
 
-  <!-- Header -->
   <div class="header">
     <div class="logo-mark">
       <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.5a8.27 8.27 0 0 0 4.84 1.55V6.59a4.85 4.85 0 0 1-1.07.1z"/></svg>
     </div>
     <h1>TikSave</h1>
-    <p>TikTok · YouTube · no watermark · full HD</p>
-    <div class="version-badge">v3.5</div>
+    <p>no watermark · full HD · bulk ZIP</p>
+    <div class="version-badge">v4.0</div>
   </div>
 
-
-  <!-- Tab bar -->
-  <div class="tab-bar">
-    <button class="tab-btn active" id="tabTikTok">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.5a8.27 8.27 0 0 0 4.84 1.55V6.59a4.85 4.85 0 0 1-1.07.1z"/></svg>
-      TikTok
-    </button>
-    <button class="tab-btn yt" id="tabYouTube">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.54 3.5 12 3.5 12 3.5s-7.54 0-9.38.55A3.02 3.02 0 0 0 .5 6.19C0 8.04 0 12 0 12s0 3.96.5 5.81a3.02 3.02 0 0 0 2.12 2.14C4.46 20.5 12 20.5 12 20.5s7.54 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14C24 15.96 24 12 24 12s0-3.96-.5-5.81zM9.75 15.52V8.48L15.5 12l-5.75 3.52z"/></svg>
-      YouTube
-    </button>
-  </div>
-
-  <!-- Input -->
+  <!-- Single video -->
   <div class="card">
     <div class="card-label">Paste TikTok Link</div>
     <div class="input-row">
-      <input type="url" class="url-input" id="urlInput"
-        placeholder="Paste TikTok link…"
+      <input type="url" class="url-input" id="urlInput" placeholder="https://www.tiktok.com/..."
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <button class="paste-btn" id="pasteBtn">Paste</button>
     </div>
     <div class="clipboard-hint" id="clipboardHint"></div>
     <button class="fetch-btn" id="fetchBtn">Get Video ↓</button>
+  </div>
+
+  <!-- Bulk download -->
+  <div class="bulk-card">
+    <div class="bulk-header">
+      <div class="card-label" style="margin-bottom:0">Bulk Download</div>
+      <button class="bulk-toggle" id="bulkToggle">+ Expand</button>
+    </div>
+    <div class="bulk-body" id="bulkBody">
+      <textarea class="bulk-textarea" id="bulkTextarea"
+        placeholder="Paste multiple TikTok links here — one per line…"></textarea>
+      <button class="bulk-parse-btn" id="bulkParseBtn">Add Links to Queue →</button>
+    </div>
+  </div>
+
+  <!-- Queue -->
+  <div class="queue-section" id="queueSection">
+    <div class="queue-header">
+      <div>
+        <span class="queue-title">Queue</span>
+        <span class="queue-count" id="queueCount">0 videos</span>
+      </div>
+      <button class="zip-btn" id="zipBtn" disabled>⬇ Download ZIP</button>
+    </div>
+    <div class="queue-list" id="queueList"></div>
+    <button class="queue-clear" id="queueClearBtn">Clear queue</button>
   </div>
 
   <!-- Error -->
@@ -458,8 +417,6 @@ body::after {
   <!-- Result -->
   <div class="result-card" id="resultCard">
     <div class="video-info">
-
-      <!-- Thumbnail (hidden when slideshow) -->
       <div class="thumb-wrap" id="thumbWrap">
         <img id="thumbnail" src="" alt="">
         <div class="thumb-overlay">
@@ -469,7 +426,6 @@ body::after {
           </div>
         </div>
       </div>
-
       <div class="vid-meta">
         <div class="meta-pill">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.7 7.6 1 12c1.7 4.4 6 7.5 11 7.5s9.3-3.1 11-7.5c-1.7-4.4-6-7.5-11-7.5zM12 17c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/></svg>
@@ -484,57 +440,32 @@ body::after {
           <span id="duration">—</span>
         </div>
       </div>
-
-      <!-- PC Video Preview (non-iOS only) -->
       <div class="pc-preview" id="pcPreview">
         <div class="pc-preview-label">Preview</div>
         <video id="pcPreviewVideo" controls playsinline preload="metadata"></video>
       </div>
-
-      <!-- Slideshow images -->
       <div class="slideshow-wrap" id="slideshowWrap">
         <div class="slideshow-label">Images</div>
         <div class="slides-grid" id="slidesGrid"></div>
       </div>
-
-      <!-- Download buttons -->
-      <div class="download-section" id="downloadSection">
+      <div class="download-section">
         <div class="dl-label" id="dlSectionLabel">Download</div>
-
         <button class="dl-btn primary" id="dlHD" disabled>
           <div class="progress-bg" id="hdProg"></div>
-          <div class="btn-content">
-            <span id="dlHDText">⬇  HD Video + Sound</span>
-            <span class="badge" id="dlHDBadge">Full HD</span>
-          </div>
+          <div class="btn-content"><span id="dlHDText">HD Video + Sound</span><span class="badge" id="dlHDBadge">Full HD</span></div>
         </button>
-
-        <div class="hevc-warn" id="hevcWarn">
-          ⚠ This video's HD stream uses HEVC (H.265) which your device may not support. Use <strong>Standard Quality</strong> below for guaranteed compatibility.
-        </div>
+        <div class="hevc-warn" id="hevcWarn">⚠ HD stream uses HEVC (H.265) — use <strong>Standard Quality</strong> for guaranteed compatibility.</div>
         <button class="dl-btn" id="dlSD" disabled>
           <div class="progress-bg" id="sdProg"></div>
-          <div class="btn-content">
-            <span id="dlSDText">⬇  Standard Quality</span>
-            <span class="badge">SD</span>
-          </div>
+          <div class="btn-content"><span id="dlSDText">Standard Quality</span><span class="badge">SD</span></div>
         </button>
-
-        <div class="same-quality-note" id="sameQualNote">
-          ℹ HD and SD are the same file for this video
-        </div>
-
+        <div class="same-quality-note" id="sameQualNote">ℹ HD and SD are the same file for this video</div>
         <button class="dl-btn audio-btn" id="dlAudio" disabled>
           <div class="progress-bg" id="audioProg"></div>
-          <div class="btn-content">
-            <span id="dlAudioText">♫  Audio Only</span>
-            <span class="badge">M4A</span>
-          </div>
+          <div class="btn-content"><span id="dlAudioText">Audio Only</span><span class="badge">M4A</span></div>
         </button>
-
         <div class="toast-bar" id="toastBar"></div>
       </div>
-
     </div>
   </div>
 
@@ -554,42 +485,17 @@ body::after {
   <!-- Instructions -->
   <div class="instructions">
     <h2>How to Use</h2>
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-text">
-        <strong>Copy the TikTok link</strong>
-        <p>TikTok: Share → "Copy link" · YouTube: Share → "Copy link" — app auto-detects</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-text">
-        <strong>Paste &amp; fetch</strong>
-        <p>Tap "Paste" or use the auto-fill hint, then tap "Get Video"</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div class="step-text">
-        <strong>Choose format</strong>
-        <p>HD video, SD video, or audio only — audio delay is fixed automatically</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">4</div>
-      <div class="step-text">
-        <strong>Save it</strong>
-        <p>iPhone: video opens → hold → Save to Photos · PC: file downloads to your folder</p>
-      </div>
-    </div>
+    <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Single video</strong><p>Paste a TikTok link and tap "Get Video"</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Bulk download</strong><p>Expand "Bulk Download", paste multiple links (one per line), tap "Add to Queue" then "Download ZIP"</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Save it</strong><p>iPhone: video opens → hold → Save to Photos · PC: file auto-downloads</p></div></div>
     <div class="platform-note">
       <div class="note-row"><span class="note-label">📱 iPhone</span><span>Open in Safari · video player appears · hold → "Save to Photos"</span></div>
-      <div class="note-row"><span class="note-label">💻 PC/Mac</span><span>Preview inline · auto-downloads with audio delay fixed</span></div>
-      <div class="note-row"><span class="note-label">🖼 Slideshows</span><span>Photo carousels show as a grid — tap each image to download</span></div>
+      <div class="note-row"><span class="note-label">💻 PC/Mac</span><span>Preview inline · auto-downloads with audio sync fixed</span></div>
+      <div class="note-row"><span class="note-label">📦 Bulk ZIP</span><span>Each video fixed + named @author_title.mp4 inside the ZIP</span></div>
     </div>
   </div>
 
-</div><!-- /container -->
+</div>
 
 <script>
 'use strict';
@@ -633,18 +539,29 @@ const histChevron = document.getElementById('historyChevron');
 const histList    = document.getElementById('historyList');
 const histEmpty   = document.getElementById('historyEmpty');
 const historyClear= document.getElementById('historyClear');
+const bulkToggle  = document.getElementById('bulkToggle');
+const bulkBody    = document.getElementById('bulkBody');
+const bulkTextarea= document.getElementById('bulkTextarea');
+const bulkParseBtn= document.getElementById('bulkParseBtn');
+const queueSection= document.getElementById('queueSection');
+const queueList   = document.getElementById('queueList');
+const queueCount  = document.getElementById('queueCount');
+const zipBtn      = document.getElementById('zipBtn');
+const queueClearBtn=document.getElementById('queueClearBtn');
 
 let currentBlob = null;
-let currentTab = 'tiktok'; // 'tiktok' | 'youtube'
 let hdUrl = '', sdUrl = '', audioUrl = '', videoTitle = 'tiktok-video', authorName = '';
-let lastFetchedUrl = '';   // for retry
-let currentImages = [];    // for slideshows
+let lastFetchedUrl = '';
+let currentImages = [];
+
+/* ── Queue state ── */
+let queue = []; // { id, url, status, title, author, thumbnail, blob, error }
+let queueIdCounter = 0;
 
 /* ── Utils ── */
 const show = el => el.style.display = 'block';
 const hide = el => el.style.display = 'none';
 const showFlex = el => el.style.display = 'flex';
-
 function formatNumber(n) {
   if (!n) return '—';
   if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
@@ -660,17 +577,19 @@ function toast(msg, type='success') {
   toastBar.className = 'toast-bar ' + type;
   show(toastBar);
 }
-function setBarWidth(el, pct) { el.style.width = pct + '%'; }
+function setBarWidth(el, pct) { el.style.width = pct+'%'; }
 function showErr(msg) { errorMsg.textContent = msg; show(errorBox); }
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
-/* ── Clipboard auto-detect on load ── */
+/* ── Clipboard auto-detect ── */
 async function checkClipboard() {
   try {
     const text = await navigator.clipboard.readText();
-    if (text && (text.includes('tiktok.com') || text.includes('vm.tiktok') || text.includes('vt.tiktok') || text.includes('youtube.com') || text.includes('youtu.be'))) {
-      if (urlInput.value.trim() === '') {
-        const isYTClip = text.includes('youtube.com') || text.includes('youtu.be');
-        clipHint.textContent = isYTClip ? '📋 YouTube link detected — tap to fill' : '📋 TikTok link detected — tap to fill';
+    if (text && (text.includes('tiktok.com') || text.includes('vm.tiktok') || text.includes('vt.tiktok'))) {
+      if (!urlInput.value.trim()) {
+        clipHint.textContent = '📋 TikTok link detected — tap to fill';
         show(clipHint);
         clipHint.onclick = () => { urlInput.value = text; hide(clipHint); };
       }
@@ -680,39 +599,30 @@ async function checkClipboard() {
 window.addEventListener('focus', checkClipboard);
 setTimeout(checkClipboard, 600);
 
-/* ── Paste button ── */
 pasteBtn.addEventListener('click', async () => {
-  try {
-    const text = await navigator.clipboard.readText();
-    urlInput.value = text;
-    hide(clipHint);
-  } catch {
-    urlInput.focus();
-    try { document.execCommand('paste'); } catch {}
-  }
+  try { urlInput.value = await navigator.clipboard.readText(); hide(clipHint); }
+  catch { urlInput.focus(); try { document.execCommand('paste'); } catch {} }
 });
-
-/* ── Retry ── */
 retryBtn.addEventListener('click', () => {
   hide(errorBox);
-  if (lastFetchedUrl) { urlInput.value = lastFetchedUrl; fetchBtn.click(); }
+  if (lastFetchedUrl) { urlInput.value = lastFetchedUrl; doFetch(); }
 });
 
-/* ── Fetch video info ── */
+/* ── Bulk toggle ── */
+bulkToggle.addEventListener('click', () => {
+  const open = bulkBody.classList.toggle('open');
+  bulkToggle.textContent = open ? '− Collapse' : '+ Expand';
+});
+
+/* ── Fetch single video ── */
 fetchBtn.addEventListener('click', doFetch);
 urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') doFetch(); });
 
 async function doFetch() {
   const url = urlInput.value.trim();
   if (!url) { showErr('Please paste a TikTok link first.'); return; }
-  const isTikTok  = url.includes('tiktok.com') || url.includes('vm.tiktok') || url.includes('vt.tiktok');
-  const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
-
-  if (currentTab === 'tiktok' && !isTikTok) {
+  if (!url.includes('tiktok.com') && !url.includes('vm.tiktok') && !url.includes('vt.tiktok')) {
     showErr("This doesn't look like a TikTok link."); return;
-  }
-  if (currentTab === 'youtube' && !isYouTube) {
-    showErr("This doesn't look like a YouTube link."); return;
   }
   lastFetchedUrl = url;
   hide(errorBox); hide(resultCard); hide(toastBar);
@@ -722,262 +632,228 @@ async function doFetch() {
   currentImages = [];
 
   try {
-    if (currentTab === 'youtube') {
-      await doFetchYouTube(url);
-      fetchBtn.disabled = false;
-      return;
-    }
-
-    const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(url)}&hd=1`;
-    const res  = await fetch(apiUrl);
-    const data = await res.json();
-    if (!data || data.code !== 0 || !data.data)
-      throw new Error(data?.msg || 'Could not fetch video. Please try again.');
-
-    const v = data.data;
-    videoTitle = (v.title||'tiktok-video').slice(0,60).replace(/[^\w\s-]/g,'').trim() || 'tiktok-video';
-    authorName = v.author?.unique_id || v.author?.nickname || '';
-
-    document.getElementById('vidTitle').textContent  = v.title || 'TikTok Video';
-    document.getElementById('vidAuthor').textContent = '@' + (authorName || 'unknown');
-    document.getElementById('viewCount').textContent = formatNumber(v.play_count||v.views);
-    document.getElementById('likeCount').textContent = formatNumber(v.digg_count||v.likes);
-    document.getElementById('duration').textContent  = formatDuration(v.duration);
-
-    hdUrl    = v.hdplay || v.play || v.wmplay || '';
-    sdUrl    = v.play   || v.wmplay || '';
-    audioUrl = v.music  || v.music_info?.play || '';
-
-    /* HEVC check */
-    const hevcWarn = document.getElementById('hevcWarn');
-    const hdIsHevc = hdUrl && sdUrl && hdUrl !== sdUrl;
-    if (hdIsHevc) {
-      const tv = document.createElement('video');
-      const ok = tv.canPlayType('video/mp4; codecs="hvc1"') !== '' || tv.canPlayType('video/mp4; codecs="hev1"') !== '';
-      hevcWarn.style.display = ok ? 'none' : 'block';
-      dlHD.style.opacity = ok ? '' : '0.55';
-      dlHD.style.filter  = ok ? '' : 'saturate(0.4)';
-    } else {
-      hevcWarn.style.display = 'none';
-      dlHD.style.opacity = ''; dlHD.style.filter = '';
-    }
-
-    /* Slideshow detection */
-    const images = v.images || v.image_post_info?.images?.map(i => i.display_image?.url_list?.[0]).filter(Boolean) || [];
-    currentImages = images;
-
-    if (images.length > 0) {
-      document.getElementById('thumbnail').src = v.cover || v.origin_cover || '';
-      thumbWrap.style.maxHeight = '120px';
-      buildSlideshowGrid(images);
-      show(slideshowW); hide(pcPreview);
-      hdUrl = ''; sdUrl = '';
-      hide(document.getElementById('dlHD'));
-      hide(document.getElementById('dlSD'));
-      hide(sameQNote);
-    } else {
-      document.getElementById('thumbnail').src = v.cover || v.origin_cover || '';
-      thumbWrap.style.maxHeight = '300px';
-      hide(slideshowW);
-      show(document.getElementById('dlHD'));
-      show(document.getElementById('dlSD'));
-      if (!isIOS && hdUrl) { pcPrevVid.src = hdUrl; show(pcPreview); } else { hide(pcPreview); }
-      const sameQ = hdUrl && sdUrl && hdUrl === sdUrl;
-      sameQNote.style.display = sameQ ? 'block' : 'none';
-      const prefix = isIOS ? '📲  ' : '⬇  ';
-      document.getElementById('dlHDText').textContent = prefix + (isIOS ? 'Save HD to Photos' : 'HD Video + Sound');
-      document.getElementById('dlSDText').textContent = prefix + (isIOS ? 'Save SD to Photos' : 'Standard Quality');
-      document.getElementById('dlSectionLabel').textContent = isIOS ? 'Save to Camera Roll' : 'Download';
-      dlHD.disabled = !hdUrl;
-      dlSD.disabled = !sdUrl || sameQ;
-    }
-
-    document.getElementById('dlAudioText').textContent = (isIOS ? '📲  ' : '⬇  ') + 'Audio Only';
-    dlAudio.disabled = !audioUrl;
-
-    hide(statusEl); show(resultCard);
-    toast(isIOS ? '✓ Ready — tap above to save' : '✓ Ready — tap to download', isIOS ? 'info' : 'success');
-    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    saveHistory({ url, title: v.title || 'TikTok Video', author: authorName, thumbnail: v.cover || v.origin_cover || '', date: Date.now(), isSlideshow: images.length > 0 });
+    const data = await fetchTikTokMeta(url);
+    populateSingleResult(url, data);
+    saveHistory({ url, title: data.title||'TikTok Video', author: authorName, thumbnail: data.thumbnail, date: Date.now(), isSlideshow: (data.images||[]).length > 0 });
     renderHistory();
-
   } catch(err) {
     hide(statusEl);
-    showErr(err.message || 'Failed to fetch video. Please try again.');
+    showErr(err.message || 'Failed to fetch. Please try again.');
   }
   fetchBtn.disabled = false;
 }
 
+async function fetchTikTokMeta(url) {
+  const res  = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(url)}&hd=1`);
+  const data = await res.json();
+  if (!data || data.code !== 0 || !data.data) throw new Error(data?.msg || 'Could not fetch video.');
+  const v = data.data;
+  return {
+    title:     v.title || '',
+    author:    v.author?.unique_id || v.author?.nickname || '',
+    thumbnail: v.cover || v.origin_cover || '',
+    views:     v.play_count || v.views,
+    likes:     v.digg_count || v.likes,
+    duration:  v.duration,
+    hdUrl:     v.hdplay || v.play || v.wmplay || '',
+    sdUrl:     v.play   || v.wmplay || '',
+    audioUrl:  v.music  || v.music_info?.play || '',
+    images:    v.images || v.image_post_info?.images?.map(i => i.display_image?.url_list?.[0]).filter(Boolean) || [],
+  };
+}
 
+function populateSingleResult(url, v) {
+  videoTitle = (v.title||'tiktok-video').slice(0,60).replace(/[^\w\s-]/g,'').trim() || 'tiktok-video';
+  authorName = v.author || '';
+  hdUrl = v.hdUrl; sdUrl = v.sdUrl; audioUrl = v.audioUrl;
 
+  document.getElementById('vidTitle').textContent  = v.title || 'TikTok Video';
+  document.getElementById('vidAuthor').textContent = '@'+(authorName||'unknown');
+  document.getElementById('viewCount').textContent = formatNumber(v.views);
+  document.getElementById('likeCount').textContent = formatNumber(v.likes);
+  document.getElementById('duration').textContent  = formatDuration(v.duration);
 
-/* ── Download button listeners ── */
+  // HEVC check
+  const hevcWarn = document.getElementById('hevcWarn');
+  const hdIsHevc = hdUrl && sdUrl && hdUrl !== sdUrl;
+  if (hdIsHevc) {
+    const tv = document.createElement('video');
+    const ok = tv.canPlayType('video/mp4; codecs="hvc1"') !== '' || tv.canPlayType('video/mp4; codecs="hev1"') !== '';
+    hevcWarn.style.display = ok ? 'none' : 'block';
+    dlHD.style.opacity = ok ? '' : '0.55';
+    dlHD.style.filter  = ok ? '' : 'saturate(0.4)';
+  } else {
+    hevcWarn.style.display = 'none';
+    dlHD.style.opacity = ''; dlHD.style.filter = '';
+  }
+
+  const images = v.images || [];
+  currentImages = images;
+
+  if (images.length > 0) {
+    document.getElementById('thumbnail').src = v.thumbnail;
+    thumbWrap.style.maxHeight = '120px';
+    buildSlideshowGrid(images);
+    show(slideshowW); hide(pcPreview);
+    hdUrl = ''; sdUrl = '';
+    hide(dlHD); hide(dlSD); hide(sameQNote);
+  } else {
+    document.getElementById('thumbnail').src = v.thumbnail;
+    thumbWrap.style.maxHeight = '300px';
+    hide(slideshowW); show(dlHD); show(dlSD);
+    if (!isIOS && hdUrl) { pcPrevVid.src = hdUrl; show(pcPreview); } else { hide(pcPreview); }
+    const sameQ = hdUrl && sdUrl && hdUrl === sdUrl;
+    sameQNote.style.display = sameQ ? 'block' : 'none';
+    const prefix = isIOS ? '📲  ' : '⬇  ';
+    document.getElementById('dlHDText').textContent = prefix + (isIOS ? 'Save HD to Photos' : 'HD Video + Sound');
+    document.getElementById('dlSDText').textContent = prefix + (isIOS ? 'Save SD to Photos' : 'Standard Quality');
+    document.getElementById('dlSectionLabel').textContent = isIOS ? 'Save to Camera Roll' : 'Download';
+    dlHD.disabled = !hdUrl;
+    dlSD.disabled = !sdUrl || sameQ;
+  }
+  document.getElementById('dlAudioText').textContent = (isIOS ? '📲  ' : '⬇  ') + 'Audio Only';
+  dlAudio.disabled = !audioUrl;
+
+  hide(statusEl); show(resultCard);
+  toast(isIOS ? '✓ Ready — tap above to save' : '✓ Ready — tap to download', isIOS ? 'info' : 'success');
+  resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── Slideshow ── */
+function buildSlideshowGrid(images) {
+  slidesGrid.innerHTML = '';
+  images.forEach((src, i) => {
+    const item = document.createElement('div');
+    item.className = 'slide-item';
+    item.innerHTML = `<img src="${escHtml(src)}" alt="Slide ${i+1}" loading="lazy">
+      <button class="slide-dl-btn">↓</button>`;
+    item.querySelector('.slide-dl-btn').onclick = e => { e.stopPropagation(); downloadImage(src, i+1); };
+    slidesGrid.appendChild(item);
+  });
+}
+async function downloadImage(src, index) {
+  try {
+    const blob = await (await fetch(src, { mode: 'cors' })).blob();
+    const ext  = blob.type.includes('png') ? 'png' : 'jpg';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (authorName ? `@${authorName}_` : '') + `${videoTitle}_${index}.${ext}`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch { window.open(src, '_blank'); }
+}
+
+/* ── Download buttons ── */
 dlHD.addEventListener('click',    () => startDownload(hdUrl,    'hd',    hdProg,    dlHD));
 dlSD.addEventListener('click',    () => startDownload(sdUrl,    'sd',    sdProg,    dlSD));
 dlAudio.addEventListener('click', () => startDownload(audioUrl, 'audio', audioProg, dlAudio));
 
 async function startDownload(url, quality, progressEl, btn) {
   if (!url) return;
-
   if (isIOS) {
     btn.disabled = true;
-    iosLoading.style.display = 'flex';
-    iosReady.style.display   = 'none';
-    iosModal.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    iosLoading.style.display = 'flex'; iosReady.style.display = 'none';
+    iosModal.classList.add('open'); document.body.style.overflow = 'hidden';
     currentBlob = null;
-
     try {
-      iosLoadMsg.textContent  = quality === 'audio' ? 'Downloading audio…' : 'Downloading video…';
+      iosLoadMsg.textContent = quality === 'audio' ? 'Downloading audio…' : 'Downloading video…';
       iosLoadFill.style.width = '5%';
-
       currentBlob = await fetchAndFix(url, pct => {
-        iosLoadFill.style.width = pct + '%';
+        iosLoadFill.style.width = pct+'%';
         if (pct >= 92) iosLoadMsg.textContent = quality === 'audio' ? 'Done!' : 'Fixing audio sync…';
       }, quality === 'audio');
-
-      const blobUrl = URL.createObjectURL(currentBlob);
-      iosVideo.src = blobUrl;
-      iosVideo.load();
-      iosVideo.play().catch(() => {});
-      iosLoading.style.display = 'none';
-      iosReady.style.display   = 'flex';
-
-    } catch(err) {
-      console.warn('iOS blob fetch failed, falling back:', err);
-      iosVideo.src = url;
+      iosVideo.src = URL.createObjectURL(currentBlob);
       iosVideo.load(); iosVideo.play().catch(() => {});
-      iosLoading.style.display = 'none';
-      iosReady.style.display   = 'flex';
+      iosLoading.style.display = 'none'; iosReady.style.display = 'flex';
+    } catch(err) {
+      iosVideo.src = url; iosVideo.load(); iosVideo.play().catch(() => {});
+      iosLoading.style.display = 'none'; iosReady.style.display = 'flex';
     }
     btn.disabled = false;
-
   } else {
-    btn.disabled = true;
-    setBarWidth(progressEl, 5);
-
+    btn.disabled = true; setBarWidth(progressEl, 5);
     try {
       const blob = await fetchAndFix(url, pct => setBarWidth(progressEl, pct), quality === 'audio');
       setBarWidth(progressEl, 100);
-
       const ext    = quality === 'audio' ? 'm4a' : 'mp4';
       const prefix = authorName ? `@${authorName}_` : '';
       const fname  = `${prefix}${videoTitle}_${quality}.${ext}`;
-
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl; a.download = fname;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
-
       pcOverlay.classList.add('open');
-
     } catch(err) {
-      console.warn('Blob fetch failed, fallback:', err);
       window.open(url, '_blank');
       toast('⚠ Browser blocked direct download — right-click → "Save As"', 'warn');
     }
-
     setTimeout(() => { setBarWidth(progressEl, 0); btn.disabled = false; }, 900);
   }
 }
 
-/* ── iOS Share ── */
+/* ── iOS share button ── */
 document.getElementById('iosShareBtn').addEventListener('click', async () => {
   const shareBtn = document.getElementById('iosShareBtn');
-
-  /* If we already have a blob, share it directly */
   if (currentBlob) {
     const file = new File([currentBlob], `${videoTitle}.mp4`, { type: 'video/mp4' });
     try {
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: videoTitle });
-      } else if (navigator.share) {
-        await navigator.share({ title: videoTitle });
-      }
+      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: videoTitle });
+      else if (navigator.share) await navigator.share({ title: videoTitle });
     } catch(e) { if (e.name !== 'AbortError') console.warn(e); }
     return;
   }
-
-  /* No blob yet (fallback path) — fetch it now then share */
   const src = iosVideo.src;
   if (!src || src.startsWith('blob:')) return;
-
   const origText = shareBtn.textContent;
-  shareBtn.textContent = '⏳ Preparing…';
-  shareBtn.disabled = true;
-
+  shareBtn.textContent = '⏳ Preparing…'; shareBtn.disabled = true;
   try {
-    const blob = await fetchAndFix(src, () => {}, false);
-    currentBlob = blob;
-
-    const file = new File([blob], `${videoTitle}.mp4`, { type: 'video/mp4' });
-    shareBtn.textContent = origText;
-    shareBtn.disabled = false;
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: videoTitle });
-    } else if (navigator.share) {
-      await navigator.share({ title: videoTitle });
-    } else {
-      alert('Tap and hold the video above, then choose "Save to Photos".');
-    }
+    currentBlob = await fetchAndFix(src, () => {}, false);
+    const file = new File([currentBlob], `${videoTitle}.mp4`, { type: 'video/mp4' });
+    shareBtn.textContent = origText; shareBtn.disabled = false;
+    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: videoTitle });
+    else if (navigator.share) await navigator.share({ title: videoTitle });
+    else alert('Long-press the video above and choose "Save to Photos".');
   } catch(e) {
-    shareBtn.textContent = origText;
-    shareBtn.disabled = false;
-    if (e.name !== 'AbortError') {
-      alert('Could not prepare video for sharing. Please long-press the video above and choose "Save to Photos".');
-    }
+    shareBtn.textContent = origText; shareBtn.disabled = false;
+    if (e.name !== 'AbortError') alert('Could not prepare video. Long-press the video and choose "Save to Photos".');
   }
 });
 
 document.getElementById('iosClose').addEventListener('click', () => {
   iosModal.classList.remove('open');
   iosVideo.pause(); iosVideo.src = '';
-  iosLoading.style.display = 'flex';
-  iosReady.style.display   = 'none';
-  iosLoadFill.style.width  = '0%';
-  iosLoadMsg.textContent   = 'Downloading video…';
-  currentBlob = null;
-  document.body.style.overflow = '';
+  iosLoading.style.display = 'flex'; iosReady.style.display = 'none';
+  iosLoadFill.style.width = '0%'; iosLoadMsg.textContent = 'Downloading video…';
+  currentBlob = null; document.body.style.overflow = '';
 });
-
 document.getElementById('pcClose').addEventListener('click', () => pcOverlay.classList.remove('open'));
 
 /* ── Audio delay fix ─────────────────────────────────────────────────────────
- * TikTok encodes two types of delay in the elst (edit list) box:
- *   Pattern A — negative media_time: decoder skips N samples before starting
- *   Pattern B — media_time = -1 (empty edit): silent gap of segment_duration
- *
- * Zeroing both to 0 over-corrects by ~12 ms because AAC has a fixed encoder
- * priming buffer that legitimate players expect. The fix is to:
- *   - Read the track's actual timescale from its mdhd box
- *   - Leave a residual of exactly KEEP_MS milliseconds instead of going to 0
- *     (Pattern A → set media_time = +residual)
- *     (Pattern B → set segment_duration = residual, keep media_time = -1)
- * ──────────────────────────────────────────────────────────────────────────── */
-const KEEP_MS = 0.012; // seconds of delay to preserve
+ * Reads each track's timescale from mdhd, then sets a residual of KEEP_MS
+ * instead of zeroing the elst entries, preserving the encoder priming buffer.
+ * Pattern A (negative media_time): set to +residual
+ * Pattern B (media_time = -1, empty edit): set segment_duration to residual
+ * ───────────────────────────────────────────────────────────────────────── */
+const KEEP_MS = 0.012;
 
 function fixAudioDelay(srcBuffer) {
   const buf  = srcBuffer.slice(0);
   const u8   = new Uint8Array(buf);
   const view = new DataView(buf);
 
-  /* ── helper: find first box of given type within [start, end) ── */
   function findBox(start, end, type) {
     let cur = start;
     while (cur + 8 <= end) {
       const sz = view.getUint32(cur, false);
       if (sz < 8 || cur + sz > end) break;
-      if (u8[cur+4] === type.charCodeAt(0) && u8[cur+5] === type.charCodeAt(1) &&
-          u8[cur+6] === type.charCodeAt(2) && u8[cur+7] === type.charCodeAt(3)) return cur;
+      if (u8[cur+4]===type.charCodeAt(0) && u8[cur+5]===type.charCodeAt(1) &&
+          u8[cur+6]===type.charCodeAt(2) && u8[cur+7]===type.charCodeAt(3)) return cur;
       cur += sz;
     }
     return -1;
   }
 
-  /* ── find moov ── */
   let moovStart = -1; let cur = 0;
   while (cur + 8 <= u8.length) {
     const sz = view.getUint32(cur, false);
@@ -988,72 +864,43 @@ function fixAudioDelay(srcBuffer) {
   if (moovStart === -1) return buf;
   const moovEnd = moovStart + view.getUint32(moovStart, false);
 
-  /* ── iterate trak boxes inside moov ── */
   let trakCur = moovStart + 8;
   while (trakCur + 8 <= moovEnd) {
     const trakSz = view.getUint32(trakCur, false);
     if (trakSz < 8) break;
-    const tt = String.fromCharCode(u8[trakCur+4], u8[trakCur+5], u8[trakCur+6], u8[trakCur+7]);
-
-    if (tt === 'trak') {
+    if (u8[trakCur+4]===0x74 && u8[trakCur+5]===0x72 && u8[trakCur+6]===0x61 && u8[trakCur+7]===0x6B) {
       const trakEnd = trakCur + trakSz;
-
-      /* read timescale from mdia > mdhd */
-      let timescale = 44100; // safe default (common AAC rate)
+      let timescale = 44100;
       const mdiaPos = findBox(trakCur + 8, trakEnd, 'mdia');
       if (mdiaPos !== -1) {
         const mdiaEnd = mdiaPos + view.getUint32(mdiaPos, false);
         const mdhdPos = findBox(mdiaPos + 8, mdiaEnd, 'mdhd');
         if (mdhdPos !== -1) {
           const mdhdVer = u8[mdhdPos + 8];
-          // v0: size(4)+type(4)+ver(1)+flags(3)+ct(4)+mt(4) → timescale at +20
-          // v1: size(4)+type(4)+ver(1)+flags(3)+ct(8)+mt(8) → timescale at +28
           timescale = view.getUint32(mdhdPos + (mdhdVer === 1 ? 28 : 20), false);
         }
       }
-
-      /* residual in timescale units = exactly KEEP_MS seconds */
       const residual = Math.round(KEEP_MS * timescale);
-
-      /* find edts > elst */
-      const edtsPos = findBox(trakCur + 8, trakEnd, 'edts');
+      const edtsPos  = findBox(trakCur + 8, trakEnd, 'edts');
       if (edtsPos !== -1) {
         const edtsEnd = edtsPos + view.getUint32(edtsPos, false);
         const elstPos = findBox(edtsPos + 8, edtsEnd, 'elst');
         if (elstPos !== -1) {
-          // elst full-box: size(4)+type(4)+version(1)+flags(3)+entry_count(4)+entries
           const elstVer    = u8[elstPos + 8];
           const entryCount = view.getUint32(elstPos + 12, false);
-          let   ptr        = elstPos + 16;
-
+          let ptr = elstPos + 16;
           for (let e = 0; e < entryCount; e++) {
             if (elstVer === 1) {
-              // v1 entry (20 bytes): seg_dur(8) + media_time(8) + media_rate(4)
               const mtHi = view.getInt32(ptr + 8,  false);
               const mtLo = view.getUint32(ptr + 12, false);
               const isEmpty = (mtHi === -1 && mtLo === 0xFFFFFFFF);
-              if (isEmpty) {
-                // Pattern B: replace silent gap with residual duration
-                view.setUint32(ptr + 0, 0, false);
-                view.setUint32(ptr + 4, residual, false);
-                // keep media_time = -1 (it marks this as an empty edit)
-              } else if (mtHi < 0) {
-                // Pattern A: set media_time to +residual (skip exactly 12 ms)
-                view.setInt32(ptr + 8,  0, false);
-                view.setUint32(ptr + 12, residual, false);
-              }
+              if (isEmpty) { view.setUint32(ptr+0,0,false); view.setUint32(ptr+4,residual,false); }
+              else if (mtHi < 0) { view.setInt32(ptr+8,0,false); view.setUint32(ptr+12,residual,false); }
               ptr += 20;
             } else {
-              // v0 entry (12 bytes): seg_dur(4) + media_time(4) + media_rate(4)
               const mt = view.getInt32(ptr + 4, false);
-              if (mt === -1) {
-                // Pattern B: replace silent gap with residual duration
-                view.setUint32(ptr + 0, residual, false);
-                // keep media_time = -1
-              } else if (mt < 0) {
-                // Pattern A: set media_time to +residual
-                view.setInt32(ptr + 4, residual, false);
-              }
+              if (mt === -1)   view.setUint32(ptr+0, residual, false);
+              else if (mt < 0) view.setInt32(ptr+4,  residual, false);
               ptr += 12;
             }
           }
@@ -1062,72 +909,10 @@ function fixAudioDelay(srcBuffer) {
     }
     trakCur += trakSz;
   }
-
   return buf;
 }
 
-/* ── MP4 metadata injection ── */
-function injectMp4Metadata(srcBuffer, artist, title) {
-  if (!artist && !title) return srcBuffer;
-  const enc = new TextEncoder();
-  function box(type, payload) {
-    const t = enc.encode(type); const b = new Uint8Array(8 + payload.length);
-    new DataView(b.buffer).setUint32(0, 8 + payload.length, false);
-    b.set(t, 4); b.set(payload, 8); return b;
-  }
-  function dataAtom(text) {
-    const tb = enc.encode(text); const b = new Uint8Array(16 + tb.length);
-    const dv = new DataView(b.buffer);
-    dv.setUint32(0, b.length, false); b.set([0x64,0x61,0x74,0x61], 4);
-    dv.setUint32(8, 1, false); dv.setUint32(12, 0, false); b.set(tb, 16); return b;
-  }
-  const items = [];
-  if (artist) items.push(box('\u00a9ART', dataAtom(artist)));
-  if (title)  items.push(box('\u00a9nam', dataAtom(title)));
-  const ilstPay = new Uint8Array(items.reduce((s,i) => s+i.length, 0));
-  let off = 0; for (const it of items) { ilstPay.set(it, off); off += it.length; }
-  const ilst = box('ilst', ilstPay);
-  const metaPay = new Uint8Array(4 + ilst.length);
-  metaPay.set(ilst, 4);
-  const meta = box('meta', metaPay);
-  const udta = box('udta', meta);
-  const src = new Uint8Array(srcBuffer); const sdv = new DataView(srcBuffer);
-  let moovStart = -1, moovSize = 0, cursor = 0;
-  while (cursor + 8 <= src.length) {
-    const bsz = sdv.getUint32(cursor, false);
-    if (bsz < 8 || cursor + bsz > src.length) break;
-    const t = String.fromCharCode(src[cursor+4],src[cursor+5],src[cursor+6],src[cursor+7]);
-    if (t === 'moov') { moovStart = cursor; moovSize = bsz; break; }
-    cursor += bsz;
-  }
-  if (moovStart === -1) return srcBuffer;
-  const moovEnd = moovStart + moovSize;
-  const newBuf = new ArrayBuffer(src.length + udta.length);
-  const newU8  = new Uint8Array(newBuf); const newDV = new DataView(newBuf);
-  newU8.set(src.subarray(0, moovEnd), 0);
-  newU8.set(udta, moovEnd);
-  newU8.set(src.subarray(moovEnd), moovEnd + udta.length);
-  newDV.setUint32(moovStart, moovSize + udta.length, false);
-  if (moovEnd < src.length) {
-    const shift = udta.length;
-    let p = moovStart + 8; const moovNewEnd = moovEnd + udta.length;
-    while (p + 8 <= moovNewEnd) {
-      const bsz = newDV.getUint32(p, false); if (bsz < 8) break;
-      const bt = String.fromCharCode(newU8[p+4],newU8[p+5],newU8[p+6],newU8[p+7]);
-      if (bt === 'stco') {
-        const cnt = newDV.getUint32(p+12, false);
-        for (let k=0; k<cnt; k++) { const o=p+16+k*4; newDV.setUint32(o, newDV.getUint32(o,false)+shift, false); }
-      } else if (bt === 'co64') {
-        const cnt = newDV.getUint32(p+12, false);
-        for (let k=0; k<cnt; k++) { const o=p+16+k*8+4; newDV.setUint32(o, newDV.getUint32(o,false)+shift, false); }
-      }
-      p += bsz;
-    }
-  }
-  return newBuf;
-}
-
-/* ── Fetch + fix + metadata ── */
+/* ── fetchAndFix: stream-fetch + audio fix ── */
 async function fetchAndFix(url, onProgress, skipAudioFix = false) {
   const response = await fetch(url, { mode: 'cors' });
   if (!response.ok) throw new Error('Fetch failed: ' + response.status);
@@ -1138,7 +923,7 @@ async function fetchAndFix(url, onProgress, skipAudioFix = false) {
     const { done, value } = await reader.read();
     if (done) break;
     chunks.push(value); loaded += value.length;
-    const pct = contentLength ? Math.min(88,(loaded/contentLength)*100) : Math.min(80, 5+loaded/70000);
+    const pct = contentLength ? Math.min(88, (loaded/contentLength)*100) : Math.min(80, 5+loaded/70000);
     onProgress(pct);
   }
   onProgress(92);
@@ -1146,12 +931,150 @@ async function fetchAndFix(url, onProgress, skipAudioFix = false) {
   const merged   = new Uint8Array(totalLen);
   let offset = 0;
   for (const c of chunks) { merged.set(c, offset); offset += c.length; }
-  const fixed    = (skipAudioFix || currentTab === 'youtube') ? merged.buffer : fixAudioDelay(merged.buffer);
+  const fixed = skipAudioFix ? merged.buffer : fixAudioDelay(merged.buffer);
   onProgress(100);
-    return new Blob([fixed], { type: skipAudioFix ? 'audio/mp4' : 'video/mp4' });
+  return new Blob([fixed], { type: skipAudioFix ? 'audio/mp4' : 'video/mp4' });
 }
 
-/* ── Download History (localStorage) ── */
+/* ── Bulk download ───────────────────────────────────────────────────────────
+ * Parses links from textarea, fetches each video sequentially, then packages
+ * all blobs into a ZIP file using JSZip (loaded via CDN).
+ * ───────────────────────────────────────────────────────────────────────── */
+bulkParseBtn.addEventListener('click', () => {
+  const text = bulkTextarea.value;
+  const links = text.split(/[\n\r\s,]+/)
+    .map(l => l.trim())
+    .filter(l => l.includes('tiktok.com') || l.includes('vm.tiktok') || l.includes('vt.tiktok'));
+
+  if (links.length === 0) {
+    alert('No valid TikTok links found. Please paste links — one per line.');
+    return;
+  }
+
+  links.forEach(url => {
+    if (!queue.find(q => q.url === url)) {
+      queue.push({ id: ++queueIdCounter, url, status: 'pending', title: url.slice(-20), author: '', thumbnail: '', blob: null, error: '' });
+    }
+  });
+
+  bulkTextarea.value = '';
+  renderQueue();
+  show(queueSection);
+  queueSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+function renderQueue() {
+  queueList.innerHTML = '';
+  const readyCount = queue.filter(q => q.status === 'ready').length;
+  const total = queue.length;
+  queueCount.textContent = `${total} video${total !== 1 ? 's' : ''}`;
+  zipBtn.disabled = readyCount === 0;
+
+  queue.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'queue-item';
+    div.id = 'qi-' + item.id;
+    const statusIcon = { pending: '○', fetching: '◌', ready: '✓', error: '✗' }[item.status];
+    const statusClass = item.status;
+    const subText = item.status === 'error' ? item.error : (item.author ? '@'+item.author : item.url.slice(-30));
+    div.innerHTML = `
+      <img class="queue-thumb" src="${escHtml(item.thumbnail)}" alt="">
+      <div class="queue-info">
+        <div class="queue-title-text">${escHtml(item.title)}</div>
+        <div class="queue-sub">${escHtml(subText)}</div>
+        <div class="queue-progress" id="qprog-${item.id}"><div class="queue-progress-fill" id="qprogfill-${item.id}"></div></div>
+      </div>
+      <div class="queue-status ${statusClass}">${statusIcon}</div>`;
+    queueList.appendChild(div);
+  });
+  zipBtn.disabled = readyCount === 0;
+  zipBtn.textContent = readyCount > 0 ? `⬇ Download ZIP (${readyCount})` : '⬇ Download ZIP';
+}
+
+function updateQueueItem(id, patch) {
+  const item = queue.find(q => q.id === id);
+  if (!item) return;
+  Object.assign(item, patch);
+  renderQueue();
+}
+
+zipBtn.addEventListener('click', async () => {
+  if (typeof JSZip === 'undefined') { alert('JSZip library failed to load. Please refresh the page.'); return; }
+  zipBtn.disabled = true;
+  zipBtn.classList.add('loading');
+  zipBtn.textContent = 'Preparing…';
+
+  // Fetch pending items first
+  const pending = queue.filter(q => q.status === 'pending');
+  for (const item of pending) {
+    updateQueueItem(item.id, { status: 'fetching' });
+    const fillEl = document.getElementById('qprogfill-' + item.id);
+    try {
+      const meta = await fetchTikTokMeta(item.url);
+      const title  = (meta.title||'video').slice(0,50).replace(/[^\w\s-]/g,'').trim() || 'video';
+      const author = meta.author || '';
+      const url    = meta.hdUrl || meta.sdUrl;
+      if (!url) throw new Error('No downloadable URL');
+      updateQueueItem(item.id, { title, author, thumbnail: meta.thumbnail, status: 'fetching' });
+      const blob = await fetchAndFix(url, pct => { if (fillEl) fillEl.style.width = pct+'%'; }, false);
+      updateQueueItem(item.id, { blob, status: 'ready', title, author });
+    } catch(err) {
+      updateQueueItem(item.id, { status: 'error', error: err.message || 'Failed' });
+    }
+  }
+
+  // Now ZIP all ready items
+  const ready = queue.filter(q => q.status === 'ready' && q.blob);
+  if (ready.length === 0) {
+    zipBtn.classList.remove('loading'); zipBtn.disabled = false;
+    zipBtn.textContent = '⬇ Download ZIP';
+    alert('No videos ready to download.');
+    return;
+  }
+
+  zipBtn.textContent = `Building ZIP (${ready.length} videos)…`;
+  const zip = new JSZip();
+  const names = {};
+  ready.forEach(item => {
+    let base = (item.author ? `@${item.author}_` : '') + (item.title || 'video');
+    base = base.replace(/[^\w\s@_-]/g, '').trim().replace(/\s+/g, '_').slice(0, 60);
+    if (!base) base = 'video';
+    let fname = base + '.mp4';
+    let counter = 1;
+    while (names[fname]) { fname = `${base}_${++counter}.mp4`; }
+    names[fname] = true;
+    zip.file(fname, item.blob);
+  });
+
+  try {
+    const content = await zip.generateAsync({ type: 'blob', compression: 'STORE' }, meta => {
+      zipBtn.textContent = `Zipping… ${Math.round(meta.percent)}%`;
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(content);
+    a.download = `tiksave_${ready.length}_videos.zip`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 15000);
+    zipBtn.textContent = `✓ ZIP downloaded (${ready.length} videos)`;
+    setTimeout(() => {
+      zipBtn.classList.remove('loading');
+      zipBtn.disabled = false;
+      renderQueue();
+    }, 2000);
+  } catch(err) {
+    zipBtn.classList.remove('loading'); zipBtn.disabled = false;
+    renderQueue();
+    alert('ZIP generation failed: ' + err.message);
+  }
+});
+
+queueClearBtn.addEventListener('click', () => {
+  queue = [];
+  renderQueue();
+  hide(queueSection);
+});
+
+/* ── Download History ── */
 const HISTORY_KEY = 'tiksave_history';
 const HISTORY_MAX = 20;
 
@@ -1159,332 +1082,51 @@ function loadHistory() {
   try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; }
 }
 function saveHistory(entry) {
-  let h = loadHistory();
-  // Remove duplicate URLs
-  h = h.filter(e => e.url !== entry.url);
+  let h = loadHistory().filter(e => e.url !== entry.url);
   h.unshift(entry);
   if (h.length > HISTORY_MAX) h = h.slice(0, HISTORY_MAX);
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); } catch {}
 }
 function renderHistory() {
   const h = loadHistory();
-  if (h.length === 0) {
-    hide(histSection);
-    return;
-  }
+  if (h.length === 0) { hide(histSection); return; }
   show(histSection);
   histEmpty.style.display = h.length === 0 ? 'block' : 'none';
   histList.innerHTML = '';
   h.forEach(entry => {
-    const item = document.createElement('div');
-    item.className = 'history-item';
+    const div = document.createElement('div');
+    div.className = 'history-item';
     const ago = timeAgo(entry.date);
-    item.innerHTML = `
-      <img class="history-thumb" src="${entry.thumbnail}" alt="" loading="lazy">
+    div.innerHTML = `
+      <img class="history-thumb" src="${escHtml(entry.thumbnail||'')}" alt="" loading="lazy">
       <div class="history-info">
-        <div class="history-title">${escHtml(entry.title)}</div>
-        <div class="history-meta">${entry.platform === 'youtube' ? '▶' : '🎵'} ${entry.author ? '@'+escHtml(entry.author)+' · ' : ''}${ago}${entry.isSlideshow ? ' · 🖼' : ''}</div>
+        <div class="history-title-text">${escHtml(entry.title)}</div>
+        <div class="history-meta-text">@${escHtml(entry.author||'unknown')} · ${ago}${entry.isSlideshow?' · 🖼':''}</div>
       </div>
-      <button class="history-reuse">↺ Load</button>
-    `;
-    item.querySelector('.history-reuse').onclick = () => {
+      <button class="history-reuse">↺ Load</button>`;
+    div.querySelector('.history-reuse').onclick = () => {
       urlInput.value = entry.url;
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => doFetch(), 300);
+      setTimeout(doFetch, 300);
     };
-    histList.appendChild(item);
+    histList.appendChild(div);
   });
 }
 function timeAgo(ts) {
-  const diff = (Date.now() - ts) / 1000;
-  if (diff < 60)   return 'just now';
-  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-  if (diff < 86400)return Math.floor(diff/3600) + 'h ago';
-  return Math.floor(diff/86400) + 'd ago';
+  const d = (Date.now()-ts)/1000;
+  if (d < 60) return 'just now';
+  if (d < 3600) return Math.floor(d/60)+'m ago';
+  if (d < 86400) return Math.floor(d/3600)+'h ago';
+  return Math.floor(d/86400)+'d ago';
 }
-function escHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-historyClear.addEventListener('click', () => {
-  localStorage.removeItem(HISTORY_KEY);
-  renderHistory();
-});
+historyClear.addEventListener('click', () => { localStorage.removeItem(HISTORY_KEY); renderHistory(); });
 histToggle.addEventListener('click', () => {
   const open = histBody.classList.toggle('open');
   histChevron.classList.toggle('open', open);
 });
 
-/* ── Main YouTube fetch ── */
-async function doFetchYouTube(url) {
-  show(statusEl);
-  const ytId = (url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/) || [])[1] || '';
-
-  try {
-    let result;
-
-    // Stage 1: cobalt 1080p
-    try {
-      statusMsg.textContent = 'Looking for download servers…';
-      result = await tryCobalt(url, '1080', function(s) { statusMsg.textContent = s; });
-      result.quality = '1080p';
-    } catch(e1) {
-      // Stage 2: cobalt 720p
-      try {
-        result = await tryCobalt(url, '720', function(s) { statusMsg.textContent = s; });
-        result.quality = '720p';
-      } catch(e2) {
-        // Stage 3: Invidious (parallel race, up to 720p)
-        if (!ytId) throw new Error('Could not parse video ID from URL.');
-        result = await tryInvidious(ytId, function(s) { statusMsg.textContent = s; });
-      }
-    }
-
-    hdUrl      = result.url;
-    sdUrl      = result.url;
-    audioUrl   = result.audio || '';
-    videoTitle = (result.title  || 'youtube-video').slice(0,60).replace(/[^\w\s-]/g,'').trim() || 'youtube-video';
-    authorName = result.author  || '';
-
-    const thumb = ytId ? 'https://i.ytimg.com/vi/' + ytId + '/hqdefault.jpg' : '';
-    document.getElementById('thumbnail').src     = thumb;
-    document.getElementById('vidTitle').textContent  = result.quality ? 'YouTube — ' + result.quality : 'YouTube Video';
-    document.getElementById('vidAuthor').textContent = authorName || (ytId ? 'youtu.be/' + ytId : 'YouTube');
-    document.getElementById('viewCount').textContent = '—';
-    document.getElementById('likeCount').textContent = '—';
-    document.getElementById('duration').textContent  = '—';
-
-    thumbWrap.style.maxHeight = '180px';
-    hide(slideshowW);
-    show(document.getElementById('dlHD'));
-    show(document.getElementById('dlSD'));
-    hide(sameQNote);
-    document.getElementById('hevcWarn').style.display = 'none';
-
-    if (!isIOS && hdUrl) { pcPrevVid.src = hdUrl; show(pcPreview); } else { hide(pcPreview); }
-
-    const prefix = isIOS ? '📲  ' : '⬇  ';
-    document.getElementById('dlHDText').textContent       = prefix + (isIOS ? 'Save to Photos' : 'Download ' + (result.quality || 'HD'));
-    document.getElementById('dlSDText').textContent       = prefix + (isIOS ? 'Save lower quality' : 'Download lower quality');
-    document.getElementById('dlSectionLabel').textContent = isIOS ? 'Save to Camera Roll' : 'Download';
-    document.getElementById('dlAudioText').textContent    = (isIOS ? '📲  ' : '⬇  ') + 'Audio Only';
-
-    dlHD.disabled    = !hdUrl;
-    dlAudio.disabled = !audioUrl;
-
-    dlSD.disabled = false;
-    dlSD.onclick = async function() {
-      if (dlSD.disabled) return;
-      dlSD.disabled = true;
-      setBarWidth(sdProg, 5);
-      show(statusEl);
-      try {
-        const r = await tryCobalt(url, '720', function(s) { statusMsg.textContent = s; });
-        hide(statusEl);
-        sdUrl = r.url;
-        dlSD.onclick = null;
-        startDownload(sdUrl, 'sd', sdProg, dlSD);
-      } catch(e) {
-        hide(statusEl);
-        dlSD.disabled = false;
-        toast('Could not fetch lower quality: ' + e.message, 'warn');
-      }
-    };
-
-    hide(statusEl); show(resultCard);
-    toast(isIOS ? '✓ Ready — tap above to save' : '✓ Ready — tap to download', isIOS ? 'info' : 'success');
-    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    saveHistory({ url: url, title: videoTitle || 'YouTube Video', author: authorName, thumbnail: thumb, date: Date.now(), isSlideshow: false, platform: 'youtube' });
-    renderHistory();
-
-  } catch(err) {
-    hide(statusEl);
-    showErr(err.message || 'Could not fetch YouTube video. Check the URL and try again.');
-  }
-}
-
-
-/* ── Tab switching ── */
-const tabTikTok  = document.getElementById('tabTikTok');
-const tabYouTube = document.getElementById('tabYouTube');
-
-function switchTab(tab) {
-  currentTab = tab;
-  hide(errorBox); hide(resultCard); hide(toastBar);
-  urlInput.value = '';
-
-  if (tab === 'tiktok') {
-    tabTikTok.classList.add('active');
-    tabYouTube.classList.remove('active');
-    urlInput.placeholder = 'Paste TikTok link…';
-    fetchBtn.style.background = 'linear-gradient(135deg,#ff2d55,#ff6b00)';
-    fetchBtn.style.boxShadow  = '0 4px 20px rgba(255,45,85,.3)';
-  } else {
-    tabYouTube.classList.add('active');
-    tabTikTok.classList.remove('active');
-    urlInput.placeholder = 'Paste YouTube link…';
-    fetchBtn.style.background = 'linear-gradient(135deg,#ff0000,#cc0000)';
-    fetchBtn.style.boxShadow  = '0 4px 20px rgba(255,0,0,.3)';
-  }
-}
-
-tabTikTok.addEventListener('click',  () => switchTab('tiktok'));
-tabYouTube.addEventListener('click', () => switchTab('youtube'));
-
-/* ── YouTube download ────────────────────────────────────────────────────────
- * Two-stage strategy:
- *   1. cobalt community instances — instances.cobalt.best/api (live, scored)
- *   2. Invidious public API       — api.invidious.io/instances.json (CORS-filtered)
- *
- * Both instance lists are fetched in the background on page load and cached.
- * fetchWithTimeout uses AbortController (works on all iOS Safari versions).
- * ─────────────────────────────────────────────────────────────────────────── */
-
-function fetchWithTimeout(url, options, ms) {
-  ms = ms || 7000;
-  const ctrl  = new AbortController();
-  const timer = setTimeout(function() { ctrl.abort(); }, ms);
-  return fetch(url, Object.assign({}, options, { signal: ctrl.signal }))
-    .finally(function() { clearTimeout(timer); });
-}
-
-/* ── cobalt ── */
-var _cobaltReady = null;
-
-function loadCobaltInstances() {
-  if (_cobaltReady) return _cobaltReady;
-  _cobaltReady = fetchWithTimeout('https://instances.cobalt.best/api', { mode: 'cors' }, 6000)
-    .then(function(r) { return r.json(); })
-    .then(function(list) {
-      var instances = list
-        .filter(function(i) {
-          return i.online === true
-            && i.info && i.info.cors === true
-            && i.info.auth === false
-            && i.services && i.services['youtube'] === true;
-        })
-        .sort(function(a, b) { return (b.score || 0) - (a.score || 0); })
-        .map(function(i) { return (i.protocol || 'https') + '://' + i.api; });
-      if (instances.length === 0) throw new Error('no suitable instances');
-      return instances;
-    })
-    .catch(function() {
-      // Hardcoded fallback — verified working, CORS_WILDCARD=1
-      return [
-        'https://cobalt.eientei.org',
-        'https://cobalt.lunar.icu',
-        'https://cobalt.urdh.dev',
-        'https://cob.ftp.sh',
-        'https://cobalt.privacyredirect.com',
-      ];
-    });
-  return _cobaltReady;
-}
-
-/* ── Invidious ── */
-var _invidiousReady = null;
-
-function loadInvidiousInstances() {
-  if (_invidiousReady) return _invidiousReady;
-  _invidiousReady = fetchWithTimeout(
-      'https://api.invidious.io/instances.json?sort_by=health',
-      { mode: 'cors' }, 6000)
-    .then(function(r) { return r.json(); })
-    .then(function(list) {
-      var instances = list
-        .filter(function(entry) {
-          var info = entry[1];
-          return info && info.cors === true && info.api === true && info.type === 'https';
-        })
-        .map(function(entry) { return 'https://' + entry[0]; });
-      if (instances.length === 0) throw new Error('no suitable instances');
-      return instances;
-    })
-    .catch(function() {
-      return [
-        'https://inv.nadeko.net',
-        'https://invidious.f5.si',
-        'https://invidious.privacyredirect.com',
-        'https://iv.datura.network',
-      ];
-    });
-  return _invidiousReady;
-}
-
-/* ── Try cobalt instances ── */
-async function tryCobalt(ytUrl, quality, onStatus) {
-  const instances = await loadCobaltInstances();
-  let lastErr = '';
-  for (let i = 0; i < instances.length; i++) {
-    const base  = instances[i];
-    const label = new URL(base).hostname;
-    if (onStatus) onStatus(`cobalt ${i+1}/${instances.length}: ${label}…`);
-    try {
-      const res = await fetchWithTimeout(base + '/', {
-        method: 'POST', mode: 'cors',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: ytUrl, videoQuality: quality, downloadMode: 'auto' }),
-      }, 7000);
-      if (!res.ok) { lastErr = 'HTTP ' + res.status + ' (' + label + ')'; continue; }
-      const data = await res.json();
-      if (data.status === 'error') { lastErr = (data.error && data.error.code ? data.error.code : 'api error') + ' (' + label + ')'; continue; }
-      if (data.status === 'tunnel' || data.status === 'redirect') return { url: data.url, audio: data.audioUrl || '' };
-      if (data.status === 'picker' && Array.isArray(data.picker) && data.picker.length > 0) {
-        const v = data.picker.find(function(p) { return p.type === 'video'; }) || data.picker[0];
-        return { url: v.url, audio: data.audio || '' };
-      }
-      lastErr = 'status "' + data.status + '" (' + label + ')';
-    } catch(e) {
-      lastErr = (e.name === 'AbortError' ? 'timeout' : (e.message || 'fetch failed')) + ' (' + label + ')';
-    }
-  }
-  throw new Error(lastErr || 'all cobalt instances failed');
-}
-
-/* ── Try Invidious instances — parallel race ──────────────────────────────
- * Sequential timeouts compound badly. Instead, fire all instances at once
- * with Promise.any() and take the first successful response.
- * Promise.any() is supported on iOS Safari 14+.
- * ─────────────────────────────────────────────────────────────────────── */
-async function tryInvidious(videoId, onStatus) {
-  const instances = await loadInvidiousInstances();
-  if (onStatus) onStatus('Trying ' + instances.length + ' fallback servers in parallel…');
-
-  const attempt = function(base) {
-    return fetchWithTimeout(
-      base + '/api/v1/videos/' + videoId + '?fields=formatStreams,title,author',
-      { mode: 'cors' },
-      12000  // generous per-instance timeout; parallel so total wait = slowest winner
-    ).then(function(res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    }).then(function(data) {
-      var streams = (data.formatStreams || []).filter(function(s) { return s.container === 'mp4'; });
-      if (!streams.length) throw new Error('no mp4 streams');
-      return {
-        url:     streams[0].url,
-        audio:   '',
-        quality: streams[0].qualityLabel || '720p',
-        title:   data.title  || '',
-        author:  data.author || '',
-      };
-    });
-  };
-
-  // Race all instances simultaneously — first to succeed wins
-  return Promise.any(instances.map(attempt))
-    .catch(function() {
-      throw new Error('All Invidious servers failed or timed out. Try again later.');
-    });
-}
-
-
-/* ── Main YouTube fetch ── */
-
 /* Init */
 renderHistory();
-// Pre-fetch Invidious instances in the background so they're ready when needed
-loadCobaltInstances();
-loadInvidiousInstances();
 setTimeout(checkClipboard, 800);
 </script>
 </body>
