@@ -361,7 +361,7 @@ body::after{content:'';position:fixed;bottom:-20%;right:-20%;width:60%;height:60
     </div>
     <h1>TikSave</h1>
     <p>no watermark · full HD · bulk ZIP</p>
-    <div class="version-badge">v4.1</div>
+    <div class="version-badge">v4.2</div>
   </div>
 
   <!-- Single video -->
@@ -936,6 +936,15 @@ async function fetchAndFix(url, onProgress, skipAudioFix = false) {
   return new Blob([fixed], { type: skipAudioFix ? 'audio/mp4' : 'video/mp4' });
 }
 
+
+function formatBytes(bytes) {
+  if (!bytes || bytes <= 0) return '?';
+  if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+  if (bytes >= 1048576)    return (bytes / 1048576).toFixed(1) + ' MB';
+  if (bytes >= 1024)       return Math.round(bytes / 1024) + ' KB';
+  return bytes + ' B';
+}
+
 /* ── Bulk download ───────────────────────────────────────────────────────────
  * Parses links from textarea, fetches each video sequentially, then packages
  * all blobs into a ZIP file using JSZip (loaded via CDN).
@@ -973,13 +982,39 @@ async function prefetchQueueMeta(items) {
     try {
       const meta = await fetchTikTokMeta(item.url);
       const title  = (meta.title || 'video').slice(0, 50).replace(/[^\w\s-]/g, '').trim() || 'video';
+      // Probe video file size via HEAD or Range request
+      let sizeBytes = 0;
+      const probeUrl = meta.hdUrl || meta.sdUrl;
+      if (probeUrl) {
+        try {
+          // Try HEAD first
+          const head = await fetch(probeUrl, { method: 'HEAD', mode: 'cors' });
+          const cl = head.headers.get('content-length');
+          if (cl) {
+            sizeBytes = parseInt(cl, 10);
+          } else {
+            // Fallback: Range request for byte 0 only — response contains Content-Range with total
+            const rng = await fetch(probeUrl, { mode: 'cors', headers: { Range: 'bytes=0-0' } });
+            const cr = rng.headers.get('content-range'); // "bytes 0-0/TOTAL"
+            if (cr) {
+              const match = cr.match(/\/(\d+)$/);
+              if (match) sizeBytes = parseInt(match[1], 10);
+            }
+            if (!sizeBytes) {
+              const rngCl = rng.headers.get('content-length');
+              if (rngCl) sizeBytes = parseInt(rngCl, 10) * 1000; // rough scale if only chunk returned
+            }
+          }
+        } catch {}
+      }
+
       updateQueueItem(item.id, {
         title,
         author:    meta.author || '',
         thumbnail: meta.thumbnail || '',
-        // keep status as pending — blob fetched when ZIP is clicked
         _hdUrl:  meta.hdUrl,
         _sdUrl:  meta.sdUrl,
+        sizeBytes,
       });
     } catch {
       updateQueueItem(item.id, { title: 'Could not load' });
@@ -1000,7 +1035,8 @@ function renderQueue() {
     div.id = 'qi-' + item.id;
     const statusIcon = { pending: '○', fetching: '◌', ready: '✓', error: '✗' }[item.status];
     const statusClass = item.status;
-    const subText = item.status === 'error' ? item.error : (item.author ? '@'+item.author : item.url.slice(-30));
+    const sizeStr = item.sizeBytes ? ' · ~' + formatBytes(item.sizeBytes) : '';
+    const subText = item.status === 'error' ? item.error : (item.author ? '@'+item.author+sizeStr : item.url.slice(-30));
     div.innerHTML = `
       <img class="queue-thumb" src="${escHtml(item.thumbnail)}" alt="">
       <div class="queue-info">
@@ -1011,12 +1047,15 @@ function renderQueue() {
       <div class="queue-status ${statusClass}">${statusIcon}</div>`;
     queueList.appendChild(div);
   });
-  const pendingCount = queue.filter(q => q.status === 'pending').length;
+  const pendingCount  = queue.filter(q => q.status === 'pending').length;
   const fetchingCount = queue.filter(q => q.status === 'fetching').length;
+  const totalBytes    = queue.reduce((s, q) => s + (q.sizeBytes || 0), 0);
+  const sizeLabel     = totalBytes > 0 ? ' · ~' + formatBytes(totalBytes) : '';
+
   zipBtn.disabled = queue.length === 0 || fetchingCount > 0;
   if (fetchingCount > 0)     zipBtn.textContent = `Fetching… (${fetchingCount} left)`;
-  else if (readyCount > 0)   zipBtn.textContent = `⬇ Download ZIP (${readyCount} ready)`;
-  else if (pendingCount > 0) zipBtn.textContent = `⬇ Fetch & Download ZIP (${pendingCount})`;
+  else if (readyCount > 0)   zipBtn.textContent = `⬇ ZIP (${readyCount} ready${sizeLabel})`;
+  else if (pendingCount > 0) zipBtn.textContent = `⬇ Fetch & ZIP (${pendingCount}${sizeLabel})`;
   else                       zipBtn.textContent = '⬇ Download ZIP';
 }
 
