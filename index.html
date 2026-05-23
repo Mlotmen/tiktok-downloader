@@ -361,7 +361,7 @@ body::after{content:'';position:fixed;bottom:-20%;right:-20%;width:60%;height:60
     </div>
     <h1>TikSave</h1>
     <p>no watermark · full HD · bulk ZIP</p>
-    <div class="version-badge">v4.3</div>
+    <div class="version-badge">v4.4</div>
   </div>
 
   <!-- Single video -->
@@ -943,7 +943,7 @@ function fixAudioDelay(srcBuffer) {
 /* ── fetchAndFix: stream-fetch + audio fix ── */
 async function fetchAndFix(url, onProgress, skipAudioFix = false) {
   const response = await fetch(url, { mode: 'cors' });
-  if (!response.ok) throw new Error('Fetch failed: ' + response.status);
+  if (!response.ok) throw new Error('HTTP ' + response.status + ' — ' + url.split('?')[0].split('/').pop().slice(0,30));
   const contentLength = +response.headers.get('content-length') || 0;
   const reader = response.body.getReader();
   const chunks = []; let loaded = 0;
@@ -1106,22 +1106,32 @@ zipBtn.addEventListener('click', async () => {
     updateQueueItem(item.id, { status: 'fetching' });
     const fillEl = document.getElementById('qprogfill-' + item.id);
     try {
-      // Use cached meta if prefetch already ran, otherwise fetch now
-      const cachedUrl = item._hdUrl || item._sdUrl;
-      let dlUrl = cachedUrl;
-      let title = item.title && item.title !== 'Loading…' && item.title !== 'Could not load' ? item.title : '';
-      let author = item.author || '';
+      // Always fetch a fresh CDN URL — cached URLs from prefetch expire quickly
+      let title     = (item.title && item.title !== 'Loading…' && item.title !== 'Could not load') ? item.title : '';
+      let author    = item.author    || '';
       let thumbnail = item.thumbnail || '';
-      if (!dlUrl || !title) {
-        const meta = await fetchTikTokMeta(item.url);
-        title     = (meta.title||'video').slice(0,50).replace(/[^\w\s-]/g,'').trim() || 'video';
-        author    = meta.author || '';
-        thumbnail = meta.thumbnail || '';
-        dlUrl     = meta.hdUrl || meta.sdUrl;
-      }
+      updateQueueItem(item.id, { status: 'fetching' });
+
+      const meta = await fetchTikTokMeta(item.url);
+      if (!title)  title  = (meta.title||'video').slice(0,50).replace(/[^\w\s-]/g,'').trim() || 'video';
+      if (!author) author = meta.author || '';
+      if (!thumbnail) thumbnail = meta.thumbnail || '';
+      const dlUrl = meta.hdUrl || meta.sdUrl;
       if (!dlUrl) throw new Error('No downloadable URL');
+
       updateQueueItem(item.id, { title, author, thumbnail, status: 'fetching' });
-      const blob = await fetchAndFix(dlUrl, pct => { if (fillEl) fillEl.style.width = pct+'%'; }, false);
+
+      // Retry once on fetch failure (transient CDN hiccup)
+      let blob;
+      try {
+        blob = await fetchAndFix(dlUrl, pct => { if (fillEl) fillEl.style.width = pct+'%'; }, false);
+      } catch(fetchErr) {
+        // Re-fetch metadata for a completely fresh URL, then retry
+        const meta2 = await fetchTikTokMeta(item.url);
+        const dlUrl2 = meta2.hdUrl || meta2.sdUrl;
+        if (!dlUrl2) throw fetchErr;
+        blob = await fetchAndFix(dlUrl2, pct => { if (fillEl) fillEl.style.width = pct+'%'; }, false);
+      }
       updateQueueItem(item.id, { blob, status: 'ready', title, author });
     } catch(err) {
       updateQueueItem(item.id, { status: 'error', error: err.message || 'Failed' });
