@@ -365,7 +365,7 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
     </div>
     <h1>TikSave</h1>
     <p>no watermark · full HD · bulk ZIP</p>
-    <div class="version-badge">v4.5</div>
+    <div class="version-badge">v4.6</div>
   </div>
 
   <!-- Single video -->
@@ -850,106 +850,62 @@ document.getElementById('pcClose').addEventListener('click', () => pcOverlay.cla
 const KEEP_MS = 0.012;
 
 function fixAudioDelay(srcBuffer) {
-  // Wrap entirely — a malformed box must never crash the download
+  /* Simple byte-scan for 'elst' boxes — deliberately avoids complex box
+   * traversal which has too many fragile edge cases (clamped moovEnd,
+   * oversized boxes, early loop exit).  Hardcoding 44100 Hz is fine:
+   * residual at 44100 = 529 samples = 11.99 ms ≈ 12 ms;
+   * at 48000 it would be 576 samples = 12.00 ms — imperceptible difference.
+   *
+   * Pattern A (negative media_time ≠ -1): set to +residual
+   * Pattern B (media_time = -1, empty edit): set segment_duration to residual
+   */
   try {
     const buf  = srcBuffer.slice(0);
     const u8   = new Uint8Array(buf);
-    const len  = buf.byteLength;
     const view = new DataView(buf);
+    const len  = buf.byteLength;
+    const residual = Math.round(KEEP_MS * 44100); // 529 samples ≈ 12 ms
 
-    // Safe read helpers — return 0 / -1 if offset is out of range
-    const safeU32 = (off) => (off + 4 <= len ? view.getUint32(off, false) : 0);
-    const safeI32 = (off) => (off + 4 <= len ? view.getInt32(off,  false) : 0);
+    for (let i = 4; i + 12 <= len; i++) {
+      // Scan for type bytes 'e','l','s','t'
+      if (u8[i]!==0x65||u8[i+1]!==0x6C||u8[i+2]!==0x73||u8[i+3]!==0x74) continue;
 
-    function findBox(start, end, type) {
-      let cur = start;
-      while (cur + 8 <= end && cur + 8 <= len) {
-        const sz = safeU32(cur);
-        if (sz < 8 || cur + sz > end || cur + sz > len) break;
-        if (u8[cur+4]===type.charCodeAt(0) && u8[cur+5]===type.charCodeAt(1) &&
-            u8[cur+6]===type.charCodeAt(2) && u8[cur+7]===type.charCodeAt(3)) return cur;
-        cur += sz;
-      }
-      return -1;
-    }
+      // i = start of type field; layout from i:
+      //   +0..3 type  +4 version  +5..7 flags  +8..11 entry_count  +12+ entries
+      const version    = u8[i + 4];
+      const entryCount = view.getUint32(i + 8, false);
+      if (entryCount === 0 || entryCount > 512) continue; // sanity guard
 
-    // Find moov
-    let moovStart = -1; let cur = 0;
-    while (cur + 8 <= len) {
-      const sz = safeU32(cur);
-      if (sz < 8 || cur + sz > len) break;
-      if (u8[cur+4]===0x6D && u8[cur+5]===0x6F && u8[cur+6]===0x6F && u8[cur+7]===0x76) { moovStart = cur; break; }
-      cur += sz;
-    }
-    if (moovStart === -1) return buf;
-    const moovEnd = Math.min(moovStart + safeU32(moovStart), len);
+      const entrySize = version === 1 ? 20 : 12;
+      let   ptr       = i + 12;
 
-    // Iterate trak boxes
-    let trakCur = moovStart + 8;
-    while (trakCur + 8 <= moovEnd) {
-      const trakSz = safeU32(trakCur);
-      if (trakSz < 8) break;                          // genuinely corrupt header
-      if (trakCur + trakSz > moovEnd) { trakCur += trakSz; continue; } // oversized but valid, skip
-      if (u8[trakCur+4]===0x74 && u8[trakCur+5]===0x72 && u8[trakCur+6]===0x61 && u8[trakCur+7]===0x6B) {
-        const trakEnd = trakCur + trakSz;
+      for (let e = 0; e < entryCount; e++) {
+        if (ptr + entrySize > len) break; // never read past buffer end
 
-        // Read timescale from mdhd
-        let timescale = 44100;
-        const mdiaPos = findBox(trakCur + 8, trakEnd, 'mdia');
-        if (mdiaPos !== -1) {
-          const mdiaEnd = Math.min(mdiaPos + safeU32(mdiaPos), trakEnd);
-          const mdhdPos = findBox(mdiaPos + 8, mdiaEnd, 'mdhd');
-          if (mdhdPos !== -1) {
-            const mdhdVer = (mdhdPos + 8 < len) ? u8[mdhdPos + 8] : 0;
-            const tsOff   = mdhdPos + (mdhdVer === 1 ? 28 : 20);
-            if (tsOff + 4 <= len) timescale = safeU32(tsOff) || 44100;
+        if (version === 1) {
+          const mtHi = view.getInt32(ptr + 8,  false);
+          const mtLo = view.getUint32(ptr + 12, false);
+          const isEmpty = (mtHi === -1 && mtLo === 0xFFFFFFFF);
+          if (isEmpty) {
+            // Pattern B: collapse silent gap to residual duration
+            view.setUint32(ptr + 0, 0,        false);
+            view.setUint32(ptr + 4, residual,  false);
+          } else if (mtHi < 0) {
+            // Pattern A: set decode offset to +residual
+            view.setInt32( ptr + 8,  0,        false);
+            view.setUint32(ptr + 12, residual,  false);
           }
+        } else {
+          const mt = view.getInt32(ptr + 4, false);
+          if (mt === -1)   { view.setUint32(ptr + 0, residual, false); }
+          else if (mt < 0) { view.setInt32( ptr + 4, residual, false); }
         }
-        const residual = Math.round(KEEP_MS * timescale);
-
-        // Fix elst
-        const edtsPos = findBox(trakCur + 8, trakEnd, 'edts');
-        if (edtsPos !== -1) {
-          const edtsEnd = Math.min(edtsPos + safeU32(edtsPos), trakEnd);
-          const elstPos = findBox(edtsPos + 8, edtsEnd, 'elst');
-          if (elstPos !== -1) {
-            const elstEnd    = Math.min(elstPos + safeU32(elstPos), edtsEnd);
-            const elstVer    = (elstPos + 8  < len) ? u8[elstPos + 8] : 0;
-            const entryCount = (elstPos + 16 <= len) ? safeU32(elstPos + 12) : 0;
-            const entrySize  = elstVer === 1 ? 20 : 12;
-            let ptr = elstPos + 16;
-
-            for (let e = 0; e < entryCount; e++) {
-              // Bounds-check the full entry before touching any bytes
-              if (ptr + entrySize > elstEnd || ptr + entrySize > len) break;
-
-              if (elstVer === 1) {
-                const mtHi    = safeI32(ptr + 8);
-                const mtLo    = safeU32(ptr + 12);
-                const isEmpty = (mtHi === -1 && mtLo === 0xFFFFFFFF);
-                if (isEmpty) {
-                  view.setUint32(ptr + 0, 0,        false);
-                  view.setUint32(ptr + 4, residual,  false);
-                } else if (mtHi < 0) {
-                  view.setInt32( ptr + 8,  0,        false);
-                  view.setUint32(ptr + 12, residual,  false);
-                }
-              } else {
-                const mt = safeI32(ptr + 4);
-                if (mt === -1)   view.setUint32(ptr + 0, residual, false);
-                else if (mt < 0) view.setInt32( ptr + 4, residual, false);
-              }
-              ptr += entrySize;
-            }
-          }
-        }
+        ptr += entrySize;
       }
-      trakCur += trakSz;
     }
     return buf;
   } catch {
-    // Return buf — at worst it is an unmodified copy of the original
-    return buf || srcBuffer.slice(0);
+    return srcBuffer.slice(0);
   }
 }
 
