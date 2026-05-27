@@ -365,7 +365,7 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
     </div>
     <h1>TikSave</h1>
     <p>no watermark · full HD · bulk ZIP</p>
-    <div class="version-badge">v4.7</div>
+    <div class="version-badge">v4.8</div>
   </div>
 
   <!-- Single video -->
@@ -912,6 +912,167 @@ function fixAudioDelay(srcBuffer) {
   }
 }
 
+
+/* ── injectAudioElst ─────────────────────────────────────────────────────────
+ * Called when fixAudioDelay finds no elst boxes (modified = 0).
+ * TikTok sometimes bakes the encoder delay into the AAC bitstream without
+ * an edit list. We fix it by injecting a synthetic edts+elst into the audio
+ * trak that tells the player to skip the first `residual` samples.
+ * ───────────────────────────────────────────────────────────────────────── */
+function injectAudioElst(srcBuffer) {
+  try {
+    const u8  = new Uint8Array(srcBuffer);
+    const dv  = new DataView(srcBuffer);
+    const len = srcBuffer.byteLength;
+    const residual = Math.round(KEEP_MS * 44100);
+
+    const r32  = (o) => o + 4 <= len ? dv.getUint32(o, false) : 0;
+    const t4   = (o) => String.fromCharCode(u8[o], u8[o+1], u8[o+2], u8[o+3]);
+
+    // Find first direct child box of given type within [s, e)
+    function child(s, e, t) {
+      let c = s;
+      while (c + 8 <= e) {
+        const sz = r32(c); if (sz < 8 || c + sz > e) break;
+        if (t4(c + 4) === t) return c;
+        c += sz;
+      }
+      return -1;
+    }
+
+    // Find moov
+    let moovPos = -1;
+    { let c = 0;
+      while (c + 8 <= len) {
+        const sz = r32(c); if (sz < 8 || c + sz > len) break;
+        if (t4(c + 4) === 'moov') { moovPos = c; break; }
+        c += sz;
+      }
+    }
+    if (moovPos === -1) return srcBuffer;
+    const moovSz  = r32(moovPos);
+    const moovEnd = moovPos + moovSz;
+
+    // Movie duration from mvhd (movie timescale for segment_duration)
+    let movieDur = 0x7FFFFFFF;
+    const mvhdP = child(moovPos + 8, moovEnd, 'mvhd');
+    if (mvhdP !== -1) {
+      const v = u8[mvhdP + 8];
+      movieDur = v === 1 ? r32(mvhdP + 36) : r32(mvhdP + 24);
+    }
+
+    // Find audio trak that has no edts/elst
+    let audioTrakPos = -1, audioTrakSz = 0;
+    let tc = moovPos + 8;
+    while (tc + 8 <= moovEnd) {
+      const sz = r32(tc); if (sz < 8) break;
+      if (t4(tc + 4) === 'trak') {
+        const tEnd = tc + sz;
+        // Check handler type = 'soun'
+        const mdiaP = child(tc + 8, tEnd, 'mdia');
+        if (mdiaP !== -1) {
+          const mdiaEnd = mdiaP + r32(mdiaP);
+          const hdlrP   = child(mdiaP + 8, mdiaEnd, 'hdlr');
+          // hdlr layout: size(4)+type(4)+ver(1)+flags(3)+pre_defined(4)+handler_type(4)
+          if (hdlrP !== -1 && hdlrP + 20 <= len && t4(hdlrP + 16) === 'soun') {
+            // Audio track — does it already have an elst?
+            const edtsP = child(tc + 8, tEnd, 'edts');
+            const hasElst = edtsP !== -1 && child(edtsP + 8, edtsP + r32(edtsP), 'elst') !== -1;
+            if (!hasElst) { audioTrakPos = tc; audioTrakSz = sz; break; }
+          }
+        }
+      }
+      tc += sz;
+    }
+    if (audioTrakPos === -1) return srcBuffer; // nothing to inject
+
+    // Track duration from tkhd (also in movie timescale)
+    let trackDur = movieDur;
+    const tkhdP = child(audioTrakPos + 8, audioTrakPos + audioTrakSz, 'tkhd');
+    if (tkhdP !== -1) {
+      const v = u8[tkhdP + 8];
+      trackDur = v === 1 ? r32(tkhdP + 36) : r32(tkhdP + 24);
+    }
+
+    // Build elst v0, 1 entry:  seg_dur(4) | media_time(4) | media_rate(4)
+    const elst = new Uint8Array(28);
+    const edv  = new DataView(elst.buffer);
+    edv.setUint32(0, 28, false);
+    elst.set([0x65,0x6C,0x73,0x74], 4);      // 'elst'
+    // version=0, flags=0 already zero
+    edv.setUint32(12, 1, false);               // entry_count = 1
+    edv.setUint32(16, trackDur, false);        // segment_duration
+    edv.setInt32 (20, residual, false);        // media_time  (skip encoder delay)
+    edv.setUint32(24, 0x00010000, false);      // media_rate  = 1.0
+
+    // Wrap in edts
+    const edts = new Uint8Array(36);
+    const ddv  = new DataView(edts.buffer);
+    ddv.setUint32(0, 36, false);
+    edts.set([0x65,0x64,0x74,0x73], 4);       // 'edts'
+    edts.set(elst, 8);
+
+    // Insert edts at start of trak content (after 8-byte trak header)
+    const insertAt  = audioTrakPos + 8;
+    const injectLen = 36;
+    const newBuf    = new ArrayBuffer(len + injectLen);
+    const nU8       = new Uint8Array(newBuf);
+    const nDV       = new DataView(newBuf);
+
+    nU8.set(u8.subarray(0, insertAt), 0);
+    nU8.set(edts, insertAt);
+    nU8.set(u8.subarray(insertAt), insertAt + injectLen);
+
+    // Patch trak size and moov size
+    nDV.setUint32(audioTrakPos, audioTrakSz + injectLen, false);
+    nDV.setUint32(moovPos,      moovSz      + injectLen, false);
+
+    // If moov is before mdat, chunk offsets inside ALL traks must be shifted
+    if (moovEnd < len) {
+      let tc2 = moovPos + 8;
+      const newMoovEnd = moovPos + nDV.getUint32(moovPos, false);
+      while (tc2 + 8 <= newMoovEnd) {
+        const sz2 = nDV.getUint32(tc2, false); if (sz2 < 8) break;
+        if (String.fromCharCode(nU8[tc2+4],nU8[tc2+5],nU8[tc2+6],nU8[tc2+7]) === 'trak') {
+          shiftStco(nU8, nDV, tc2, tc2 + sz2, injectLen);
+        }
+        tc2 += sz2;
+      }
+    }
+
+    console.log('[TikSave] injectAudioElst: injected elst with media_time=' + residual);
+    return newBuf;
+
+  } catch(e) {
+    console.warn('[TikSave] injectAudioElst error:', e);
+    return srcBuffer;
+  }
+}
+
+function shiftStco(u8, dv, start, end, shift) {
+  let c = start + 8;
+  while (c + 8 <= end) {
+    const sz = dv.getUint32(c, false); if (sz < 8) break;
+    const t = String.fromCharCode(u8[c+4],u8[c+5],u8[c+6],u8[c+7]);
+    if (t === 'stco') {
+      const cnt = dv.getUint32(c + 12, false);
+      for (let k = 0; k < cnt; k++) {
+        const o = c + 16 + k * 4;
+        if (o + 4 <= u8.length) dv.setUint32(o, dv.getUint32(o, false) + shift, false);
+      }
+    } else if (t === 'co64') {
+      const cnt = dv.getUint32(c + 12, false);
+      for (let k = 0; k < cnt; k++) {
+        const o = c + 16 + k * 8 + 4;
+        if (o + 4 <= u8.length) dv.setUint32(o, dv.getUint32(o, false) + shift, false);
+      }
+    } else if ('mdia minf stbl'.includes(t)) {
+      shiftStco(u8, dv, c, c + sz, shift);
+    }
+    c += sz;
+  }
+}
+
 /* ── fetchAndFix: stream-fetch + audio fix ── */
 async function fetchAndFix(url, onProgress, skipAudioFix = false) {
   const response = await fetch(url, { mode: 'cors' });
@@ -936,8 +1097,11 @@ async function fetchAndFix(url, onProgress, skipAudioFix = false) {
     fixedBuffer = merged.buffer;
   } else {
     const result = fixAudioDelay(merged.buffer);
-    fixedBuffer = result.buf;
     console.log('[TikSave] fixAudioDelay: modified', result.fixedCount, 'elst entries');
+    // If no elst found, the delay is in the AAC bitstream — inject one
+    fixedBuffer = result.fixedCount === 0
+      ? injectAudioElst(result.buf)
+      : result.buf;
   }
   onProgress(100);
   return new Blob([fixedBuffer], { type: skipAudioFix ? 'audio/mp4' : 'video/mp4' });
