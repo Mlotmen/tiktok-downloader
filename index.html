@@ -365,7 +365,7 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
     </div>
     <h1>TikSave</h1>
     <p>no watermark · full HD · bulk ZIP</p>
-    <div class="version-badge">v4.8</div>
+    <div class="version-badge">v4.9</div>
   </div>
 
   <!-- Single video -->
@@ -991,8 +991,10 @@ function injectAudioElst(srcBuffer) {
     const tkhdP = child(audioTrakPos + 8, audioTrakPos + audioTrakSz, 'tkhd');
     if (tkhdP !== -1) {
       const v = u8[tkhdP + 8];
-      trackDur = v === 1 ? r32(tkhdP + 36) : r32(tkhdP + 24);
+      const d = v === 1 ? r32(tkhdP + 36) : r32(tkhdP + 24);
+      if (d > 0) trackDur = d;
     }
+    if (!trackDur || trackDur === 0) trackDur = 0x7FFFFFFF;
 
     // Build elst v0, 1 entry:  seg_dur(4) | media_time(4) | media_rate(4)
     const elst = new Uint8Array(28);
@@ -1012,8 +1014,11 @@ function injectAudioElst(srcBuffer) {
     edts.set([0x65,0x64,0x74,0x73], 4);       // 'edts'
     edts.set(elst, 8);
 
-    // Insert edts at start of trak content (after 8-byte trak header)
-    const insertAt  = audioTrakPos + 8;
+    // edts must appear immediately before mdia inside trak (not before tkhd)
+    // iOS AVFoundation is strict about box ordering
+    const mdiaInTrak = child(audioTrakPos + 8, audioTrakPos + audioTrakSz, 'mdia');
+    if (mdiaInTrak === -1) return srcBuffer;
+    const insertAt = mdiaInTrak;
     const injectLen = 36;
     const newBuf    = new ArrayBuffer(len + injectLen);
     const nU8       = new Uint8Array(newBuf);
