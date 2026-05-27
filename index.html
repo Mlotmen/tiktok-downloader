@@ -365,7 +365,7 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
     </div>
     <h1>TikSave</h1>
     <p>no watermark · full HD · bulk ZIP</p>
-    <div class="version-badge">v4.9</div>
+    <div class="version-badge">v5.0</div>
   </div>
 
   <!-- Single video -->
@@ -847,7 +847,8 @@ document.getElementById('pcClose').addEventListener('click', () => pcOverlay.cla
  * Pattern A (negative media_time): set to +residual
  * Pattern B (media_time = -1, empty edit): set segment_duration to residual
  * ───────────────────────────────────────────────────────────────────────── */
-const KEEP_MS = 0.012;
+const KEEP_MS    = 0.012; // residual kept in existing-elst videos
+const INJECT_MS  = 0.000; // encoder-delay skip for injected elst (tune if needed)
 
 function fixAudioDelay(srcBuffer) {
   /* Simple byte-scan for 'elst' boxes — deliberately avoids complex box
@@ -924,7 +925,7 @@ function injectAudioElst(srcBuffer) {
     const u8  = new Uint8Array(srcBuffer);
     const dv  = new DataView(srcBuffer);
     const len = srcBuffer.byteLength;
-    const residual = Math.round(KEEP_MS * 44100);
+    const residual = Math.round(INJECT_MS * 44100);
 
     const r32  = (o) => o + 4 <= len ? dv.getUint32(o, false) : 0;
     const t4   = (o) => String.fromCharCode(u8[o], u8[o+1], u8[o+2], u8[o+3]);
@@ -1045,7 +1046,7 @@ function injectAudioElst(srcBuffer) {
       }
     }
 
-    console.log('[TikSave] injectAudioElst: injected elst with media_time=' + residual);
+    console.log('[TikSave] injectAudioElst: injected elst media_time=' + residual + ' (INJECT_MS=' + INJECT_MS + ')');
     return newBuf;
 
   } catch(e) {
