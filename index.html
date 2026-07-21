@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -34,199 +33,213 @@ body::after{content:'';position:fixed;bottom:-20%;right:-20%;width:60%;height:60
 /* Header */
 .header{text-align:center;margin-bottom:32px;animation:fadeDown .6s ease both}
 .logo-mark{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;
-background:linear-gradient(135deg,#ff2d55,#ff6b00);border-radius:18px;margin-bottom:16px;
-box-shadow:0 8px 32px rgba(255,45,85,.35)}
+  background:linear-gradient(135deg,#ff2d55,#ff6b00);border-radius:18px;margin-bottom:16px;
+  box-shadow:0 8px 32px rgba(255,45,85,.35)}
 .logo-mark svg{width:32px;height:32px;fill:white}
 .header h1{font-size:28px;font-weight:800;letter-spacing:-.5px;
-background:linear-gradient(135deg,#fff 30%,#888);-webkit-background-clip:text;
--webkit-text-fill-color:transparent;background-clip:text}
-.header p{font-size:14px;color:var(–muted);margin-top:6px;font-family:‘DM Mono’,monospace}
-.version-badge{display:inline-block;margin-top:10px;font-size:10px;font-family:‘DM Mono’,monospace;
-color:rgba(255,255,255,.2);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
-border-radius:20px;padding:3px 10px;letter-spacing:1px}
+  background:linear-gradient(135deg,#fff 30%,#888);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.header p{font-size:14px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace}
+.version-badge{display:inline-block;margin-top:10px;font-size:10px;font-family:'DM Mono',monospace;
+  color:rgba(255,255,255,.2);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:3px 10px;letter-spacing:1px}
+
+/* Platform tabs */
+.platform-tabs{display:flex;gap:8px;background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:5px;margin-bottom:16px;animation:fadeUp .55s ease both}
+.platform-tab{flex:1;background:none;border:none;border-radius:11px;padding:11px 0;
+  color:var(--muted);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;-webkit-appearance:none;transition:all .2s}
+.platform-tab.active{background:linear-gradient(135deg,#ff2d55,#ff6b00);color:white;
+  box-shadow:0 4px 16px rgba(255,45,85,.3)}
+
+/* Instagram fragility notice */
+.ig-fragile-note{background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.2);
+  border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:12px;color:#ffb340;
+  font-family:'DM Mono',monospace;line-height:1.6;animation:fadeUp .5s ease both}
 
 /* Cards */
-.card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);
-padding:20px;margin-bottom:16px;animation:fadeUp .6s ease both}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin-bottom:16px;animation:fadeUp .6s ease both}
 .card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
-color:var(–muted);margin-bottom:12px}
+  color:var(--muted);margin-bottom:12px}
 .input-row{display:flex;gap:10px;align-items:stretch}
-.url-input{flex:1;background:var(–surface2);border:1px solid var(–border);border-radius:12px;
-padding:14px 16px;color:var(–text);font-family:‘DM Mono’,monospace;font-size:13px;
-outline:none;transition:border-color .2s;-webkit-appearance:none}
+.url-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;
+  outline:none;transition:border-color .2s;-webkit-appearance:none}
 .url-input:focus{border-color:rgba(255,45,85,.4)}
-.url-input::placeholder{color:var(–muted)}
-.paste-btn{background:var(–surface2);border:1px solid var(–border);border-radius:12px;
-padding:0 16px;color:var(–accent);font-family:‘Syne’,sans-serif;font-size:13px;font-weight:700;
-cursor:pointer;white-space:nowrap;transition:all .15s;-webkit-appearance:none}
+.url-input::placeholder{color:var(--muted)}
+.paste-btn{background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:0 16px;color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:all .15s;-webkit-appearance:none}
 .paste-btn:active{transform:scale(.96);background:rgba(255,45,85,.1)}
 .fetch-btn{width:100%;margin-top:14px;background:linear-gradient(135deg,#ff2d55,#ff6b00);
-border:none;border-radius:14px;padding:16px;color:white;font-family:‘Syne’,sans-serif;
-font-size:16px;font-weight:800;cursor:pointer;letter-spacing:.3px;transition:all .2s;
-box-shadow:0 4px 20px rgba(255,45,85,.3);-webkit-appearance:none}
+  border:none;border-radius:14px;padding:16px;color:white;font-family:'Syne',sans-serif;
+  font-size:16px;font-weight:800;cursor:pointer;letter-spacing:.3px;transition:all .2s;
+  box-shadow:0 4px 20px rgba(255,45,85,.3);-webkit-appearance:none}
 .fetch-btn:active{transform:scale(.98)}
 .fetch-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 
 /* Clipboard hint */
 .clipboard-hint{display:none;margin-top:10px;padding:10px 14px;
-background:rgba(255,45,85,.07);border:1px solid rgba(255,45,85,.18);border-radius:10px;
-font-size:12px;color:rgba(255,150,150,.9);font-family:‘DM Mono’,monospace;cursor:pointer;transition:all .15s}
+  background:rgba(255,45,85,.07);border:1px solid rgba(255,45,85,.18);border-radius:10px;
+  font-size:12px;color:rgba(255,150,150,.9);font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s}
 .clipboard-hint:active{background:rgba(255,45,85,.12)}
 
 /* Bulk card */
-.bulk-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);
-padding:20px;margin-bottom:16px;animation:fadeUp .65s ease both}
+.bulk-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin-bottom:16px;animation:fadeUp .65s ease both}
 .bulk-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.bulk-toggle{background:none;border:1px solid var(–border);border-radius:8px;padding:5px 12px;
-color:var(–muted);font-family:‘DM Mono’,monospace;font-size:11px;cursor:pointer;-webkit-appearance:none;transition:all .15s}
-.bulk-toggle:hover{border-color:rgba(255,45,85,.3);color:var(–accent)}
+.bulk-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;
+  color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.bulk-toggle:hover{border-color:rgba(255,45,85,.3);color:var(--accent)}
 .bulk-body{display:none}
 .bulk-body.open{display:block}
-.bulk-textarea{width:100%;background:var(–surface2);border:1px solid var(–border);border-radius:12px;
-padding:14px 16px;color:var(–text);font-family:‘DM Mono’,monospace;font-size:12px;
-outline:none;resize:vertical;min-height:100px;transition:border-color .2s;-webkit-appearance:none;
-line-height:1.6}
+.bulk-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;
+  outline:none;resize:vertical;min-height:100px;transition:border-color .2s;-webkit-appearance:none;
+  line-height:1.6}
 .bulk-textarea:focus{border-color:rgba(255,45,85,.4)}
-.bulk-textarea::placeholder{color:var(–muted)}
-.bulk-parse-btn{width:100%;margin-top:12px;background:var(–surface2);border:1px solid rgba(255,45,85,.3);
-border-radius:12px;padding:13px;color:var(–accent);font-family:‘Syne’,sans-serif;font-size:14px;
-font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none}
+.bulk-textarea::placeholder{color:var(--muted)}
+.bulk-parse-btn{width:100%;margin-top:12px;background:var(--surface2);border:1px solid rgba(255,45,85,.3);
+  border-radius:12px;padding:13px;color:var(--accent);font-family:'Syne',sans-serif;font-size:14px;
+  font-weight:700;cursor:pointer;transition:all .2s;-webkit-appearance:none}
 .bulk-parse-btn:active{transform:scale(.98);background:rgba(255,45,85,.1)}
 
 /* Queue */
-.queue-section{display:none;background:var(–surface);border:1px solid var(–border);
-border-radius:var(–radius);overflow:hidden;margin-bottom:16px;animation:fadeUp .5s ease both}
+.queue-section{display:none;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;margin-bottom:16px;animation:fadeUp .5s ease both}
 .queue-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
-border-bottom:1px solid var(–border)}
-.queue-title{font-size:13px;font-weight:700;color:var(–text)}
-.queue-count{font-size:11px;font-family:‘DM Mono’,monospace;color:var(–muted);margin-left:6px}
+  border-bottom:1px solid var(--border)}
+.queue-title{font-size:13px;font-weight:700;color:var(--text)}
+.queue-count{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-left:6px}
 .zip-btn{background:linear-gradient(135deg,rgba(48,209,88,.15),rgba(48,209,88,.05));
-border:1px solid rgba(48,209,88,.3);border-radius:10px;padding:8px 16px;
-color:var(–green);font-family:‘Syne’,sans-serif;font-size:13px;font-weight:700;
-cursor:pointer;-webkit-appearance:none;transition:all .2s;white-space:nowrap}
+  border:1px solid rgba(48,209,88,.3);border-radius:10px;padding:8px 16px;
+  color:var(--green);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;-webkit-appearance:none;transition:all .2s;white-space:nowrap}
 .zip-btn:disabled{opacity:.35;cursor:not-allowed}
 .zip-btn:not(:disabled):active{transform:scale(.97)}
 .zip-btn.loading{opacity:.7;cursor:not-allowed}
 .queue-list{max-height:360px;overflow-y:auto}
 .queue-item{display:flex;align-items:center;gap:12px;padding:12px 20px;
-border-bottom:1px solid var(–border)}
+  border-bottom:1px solid var(--border)}
 .queue-item:last-child{border-bottom:none}
 .queue-thumb{width:36px;height:36px;border-radius:7px;object-fit:cover;
-background:var(–surface2);flex-shrink:0}
+  background:var(--surface2);flex-shrink:0}
 .queue-info{flex:1;min-width:0}
 .queue-title-text{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.queue-sub{font-size:11px;font-family:‘DM Mono’,monospace;color:var(–muted);margin-top:2px}
+.queue-sub{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:2px}
 .queue-status{flex-shrink:0;font-size:20px;line-height:1}
-.queue-status.pending  {color:var(–muted)}
-.queue-status.fetching {color:var(–blue);animation:spin .8s linear infinite;display:inline-block}
-.queue-status.ready    {color:var(–green)}
-.queue-status.error    {color:var(–accent)}
+.queue-status.pending  {color:var(--muted)}
+.queue-status.fetching {color:var(--blue);animation:spin .8s linear infinite;display:inline-block}
+.queue-status.ready    {color:var(--green)}
+.queue-status.error    {color:var(--accent)}
 .queue-progress{width:100%;height:2px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:4px;overflow:hidden}
 .queue-progress-fill{height:100%;background:linear-gradient(90deg,#ff2d55,#ff6b00);border-radius:2px;
-width:0%;transition:width .2s ease}
-.queue-clear{display:block;width:100%;padding:12px;background:none;border:none;border-top:1px solid var(–border);
-color:var(–muted);font-family:‘DM Mono’,monospace;font-size:11px;cursor:pointer;
-text-align:center;transition:color .15s}
-.queue-clear:hover{color:var(–accent)}
+  width:0%;transition:width .2s ease}
+.queue-clear{display:block;width:100%;padding:12px;background:none;border:none;border-top:1px solid var(--border);
+  color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;
+  text-align:center;transition:color .15s}
+.queue-clear:hover{color:var(--accent)}
 
 /* Status */
 .status{display:none;text-align:center;padding:20px;animation:fadeUp .4s ease both}
-.spinner{width:36px;height:36px;border:3px solid var(–border);border-top-color:var(–accent);
-border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
-.status p{color:var(–muted);font-size:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+.status p{color:var(--muted);font-size:14px}
 
 /* Error */
 .error-box{display:none;background:rgba(255,45,85,.07);border:1px solid rgba(255,45,85,.2);
-border-radius:14px;padding:16px 20px;margin-bottom:16px;animation:fadeUp .4s ease both}
+  border-radius:14px;padding:16px 20px;margin-bottom:16px;animation:fadeUp .4s ease both}
 .error-box p{font-size:14px;color:#ff6b6b;margin-bottom:12px}
 .retry-btn{background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);border-radius:10px;
-padding:9px 18px;color:var(–accent);font-family:‘Syne’,sans-serif;font-size:13px;font-weight:700;
-cursor:pointer;-webkit-appearance:none;transition:all .15s}
+  padding:9px 18px;color:var(--accent);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;-webkit-appearance:none;transition:all .15s}
 .retry-btn:active{transform:scale(.97)}
 
 /* Result card */
 .result-card{display:none;animation:fadeUp .5s ease both}
-.video-info{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);
-overflow:hidden;margin-bottom:12px}
+.video-info{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-bottom:12px}
 .thumb-wrap{position:relative;width:100%;aspect-ratio:9/16;background:#000;overflow:hidden;max-height:300px}
 .thumb-wrap img{width:100%;height:100%;object-fit:cover;opacity:.85}
 .thumb-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 50%);
-display:flex;align-items:flex-end;padding:20px}
+  display:flex;align-items:flex-end;padding:20px}
 .vid-title{font-size:14px;font-weight:700;line-height:1.4;text-shadow:0 1px 4px rgba(0,0,0,.5)}
-.vid-author{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px;font-family:‘DM Mono’,monospace}
-.vid-meta{padding:14px 20px;display:flex;gap:16px;border-bottom:1px solid var(–border)}
-.meta-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(–muted);font-family:‘DM Mono’,monospace}
+.vid-author{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px;font-family:'DM Mono',monospace}
+.vid-meta{padding:14px 20px;display:flex;gap:16px;border-bottom:1px solid var(--border)}
+.meta-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
 .meta-pill svg{width:14px;height:14px;opacity:.6}
-.meta-pill span{color:var(–text);font-weight:500}
+.meta-pill span{color:var(--text);font-weight:500}
 
 /* PC preview */
 .pc-preview{display:none;padding:16px 20px 0}
 .pc-preview video{width:100%;border-radius:12px;background:#000;max-height:280px;outline:none}
 .pc-preview-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
-color:var(–muted);margin-bottom:10px}
+  color:var(--muted);margin-bottom:10px}
 
 /* Slideshow */
 .slideshow-wrap{display:none;padding:16px 20px 0}
 .slideshow-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
-color:var(–muted);margin-bottom:10px}
+  color:var(--muted);margin-bottom:10px}
 .slides-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
 .slide-item{position:relative;aspect-ratio:9/16;border-radius:10px;overflow:hidden;cursor:pointer}
 .slide-item img{width:100%;height:100%;object-fit:cover}
 .slide-dl-btn{position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,.7);border:none;
-border-radius:6px;color:white;font-size:11px;font-weight:700;padding:4px 8px;
-cursor:pointer;-webkit-appearance:none;font-family:‘Syne’,sans-serif}
+  border-radius:6px;color:white;font-size:11px;font-weight:700;padding:4px 8px;
+  cursor:pointer;-webkit-appearance:none;font-family:'Syne',sans-serif}
 
 /* Download section */
 .download-section{padding:16px 20px}
 .dl-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;
-color:var(–muted);margin-bottom:10px}
+  color:var(--muted);margin-bottom:10px}
 .dl-btn{display:flex;align-items:center;justify-content:space-between;width:100%;
-background:var(–surface2);border:1px solid var(–border);border-radius:14px;
-padding:14px 18px;color:var(–text);font-family:‘Syne’,sans-serif;font-size:15px;
-font-weight:700;cursor:pointer;margin-bottom:8px;transition:all .2s;
--webkit-appearance:none;overflow:hidden;position:relative}
+  background:var(--surface2);border:1px solid var(--border);border-radius:14px;
+  padding:14px 18px;color:var(--text);font-family:'Syne',sans-serif;font-size:15px;
+  font-weight:700;cursor:pointer;margin-bottom:8px;transition:all .2s;
+  -webkit-appearance:none;overflow:hidden;position:relative}
 .dl-btn.primary{background:linear-gradient(135deg,rgba(255,45,85,.15),rgba(255,107,0,.1));
-border-color:rgba(255,45,85,.25);color:var(–accent2)}
+  border-color:rgba(255,45,85,.25);color:var(--accent2)}
 .dl-btn.audio-btn{background:linear-gradient(135deg,rgba(10,132,255,.12),rgba(10,132,255,.05));
-border-color:rgba(10,132,255,.25);color:#6eb3ff}
+  border-color:rgba(10,132,255,.25);color:#6eb3ff}
 .dl-btn:active{transform:scale(.98)}
 .dl-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.dl-btn .badge{font-size:11px;font-family:‘DM Mono’,monospace;font-weight:500;
-background:rgba(255,255,255,.08);border-radius:6px;padding:3px 8px;color:var(–muted);
-white-space:nowrap;flex-shrink:0}
-.dl-btn.primary .badge{background:rgba(255,45,85,.15);color:var(–accent)}
-.dl-btn.audio-btn .badge{background:rgba(10,132,255,.15);color:var(–blue)}
+.dl-btn .badge{font-size:11px;font-family:'DM Mono',monospace;font-weight:500;
+  background:rgba(255,255,255,.08);border-radius:6px;padding:3px 8px;color:var(--muted);
+  white-space:nowrap;flex-shrink:0}
+.dl-btn.primary .badge{background:rgba(255,45,85,.15);color:var(--accent)}
+.dl-btn.audio-btn .badge{background:rgba(10,132,255,.15);color:var(--blue)}
 .dl-btn .progress-bg{position:absolute;top:0;left:0;height:100%;width:0%;
-background:rgba(255,255,255,.04);transition:width .25s ease;z-index:0}
+  background:rgba(255,255,255,.04);transition:width .25s ease;z-index:0}
 .dl-btn.primary .progress-bg{background:rgba(255,45,85,.07)}
 .dl-btn .btn-content{position:relative;z-index:1;display:flex;align-items:center;
-justify-content:space-between;width:100%;gap:10px}
-.same-quality-note{display:none;font-size:11px;color:var(–muted);font-family:‘DM Mono’,monospace;
-text-align:center;margin-top:-4px;margin-bottom:8px;padding:6px 0;opacity:.7}
+  justify-content:space-between;width:100%;gap:10px}
+.same-quality-note{display:none;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;
+  text-align:center;margin-top:-4px;margin-bottom:8px;padding:6px 0;opacity:.7}
 .hevc-warn{display:none;margin-top:-4px;margin-bottom:8px;padding:9px 14px;
-background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.2);border-radius:10px;
-font-size:12px;color:#ffb340;font-family:‘DM Mono’,monospace;line-height:1.5}
+  background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.2);border-radius:10px;
+  font-size:12px;color:#ffb340;font-family:'DM Mono',monospace;line-height:1.5}
 
 /* Toast */
 .toast-bar{display:none;border-radius:12px;padding:12px 16px;font-size:13px;margin-top:8px;
-text-align:center;animation:fadeUp .3s ease both;line-height:1.5;font-family:‘DM Mono’,monospace}
-.toast-bar.success{background:rgba(48,209,88,.1);border:1px solid rgba(48,209,88,.2);color:var(–green)}
+  text-align:center;animation:fadeUp .3s ease both;line-height:1.5;font-family:'DM Mono',monospace}
+.toast-bar.success{background:rgba(48,209,88,.1);border:1px solid rgba(48,209,88,.2);color:var(--green)}
 .toast-bar.info{background:rgba(10,132,255,.08);border:1px solid rgba(10,132,255,.2);color:#6eb3ff}
 .toast-bar.warn{background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.2);color:#ffb340}
 
 /* iOS Modal */
 .ios-modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.97);
-flex-direction:column;padding:env(safe-area-inset-top,16px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,16px) env(safe-area-inset-left,0)}
+  flex-direction:column;padding:env(safe-area-inset-top,16px) env(safe-area-inset-right,0) env(safe-area-inset-bottom,16px) env(safe-area-inset-left,0)}
 .ios-modal.open{display:flex;animation:fadeIn .25s ease both}
 .ios-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px;flex-shrink:0}
 .ios-modal-title{font-size:17px;font-weight:800}
 .ios-close-btn{width:34px;height:34px;background:rgba(255,255,255,.1);border:none;border-radius:50%;
-color:var(–text);font-size:16px;display:flex;align-items:center;justify-content:center;
-cursor:pointer;-webkit-appearance:none;line-height:1;flex-shrink:0}
+  color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-appearance:none;line-height:1;flex-shrink:0}
 .ios-loading{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px}
-.ios-spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,.1);border-top-color:var(–accent);
-border-radius:50%;animation:spin .8s linear infinite}
-.ios-loading p{color:var(–muted);font-size:14px;font-family:‘DM Mono’,monospace}
+.ios-spinner{width:44px;height:44px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite}
+.ios-loading p{color:var(--muted);font-size:14px;font-family:'DM Mono',monospace}
 .ios-load-track{width:200px;height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
 .ios-load-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff2d55,#ff6b00);border-radius:4px;transition:width .25s ease}
 .ios-ready{display:flex;flex-direction:column;min-height:0}
@@ -234,74 +247,74 @@ border-radius:50%;animation:spin .8s linear infinite}
 .ios-video-wrap video{max-width:100%;max-height:100%;border-radius:14px;background:#000;box-shadow:0 8px 40px rgba(0,0,0,.6);display:block}
 .ios-save-hint{flex-shrink:0;margin:10px 16px 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:14px 16px}
 .ios-share-btn{width:100%;margin-bottom:14px;background:linear-gradient(135deg,#0a84ff,#0060df);
-border:none;border-radius:14px;padding:14px 20px;color:white;font-family:‘Syne’,sans-serif;
-font-size:15px;font-weight:800;cursor:pointer;-webkit-appearance:none;
-display:flex;align-items:center;justify-content:center;gap:10px;
-box-shadow:0 4px 20px rgba(10,132,255,.3);transition:all .15s}
+  border:none;border-radius:14px;padding:14px 20px;color:white;font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:800;cursor:pointer;-webkit-appearance:none;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 4px 20px rgba(10,132,255,.3);transition:all .15s}
 .ios-share-btn:active{transform:scale(.98)}
-.ios-divider{text-align:center;font-size:11px;color:var(–muted);font-family:‘DM Mono’,monospace;margin-bottom:12px;position:relative}
-.ios-divider::before,.ios-divider::after{content:’’;position:absolute;top:50%;width:28%;height:1px;background:var(–border)}
+.ios-divider{text-align:center;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px;position:relative}
+.ios-divider::before,.ios-divider::after{content:'';position:absolute;top:50%;width:28%;height:1px;background:var(--border)}
 .ios-divider::before{left:0}.ios-divider::after{right:0}
 .ios-steps{display:flex;flex-direction:column;gap:8px}
-.ios-step-row{display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.6);font-family:‘DM Mono’,monospace}
-.ios-step-num{width:20px;height:20px;border-radius:6px;background:rgba(255,45,85,.2);color:var(–accent);
-font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:‘Syne’,sans-serif}
+.ios-step-row{display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace}
+.ios-step-num{width:20px;height:20px;border-radius:6px;background:rgba(255,45,85,.2);color:var(--accent);
+  font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Syne',sans-serif}
 
 /* PC Overlay */
 .pc-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);align-items:center;justify-content:center}
 .pc-overlay.open{display:flex;animation:fadeIn .25s ease both}
-.pc-box{background:var(–surface);border:1px solid var(–border);border-radius:24px;padding:36px 28px;
-text-align:center;max-width:320px;width:90%;animation:scaleIn .3s ease both}
+.pc-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:36px 28px;
+  text-align:center;max-width:320px;width:90%;animation:scaleIn .3s ease both}
 .pc-icon{width:60px;height:60px;background:linear-gradient(135deg,rgba(48,209,88,.15),rgba(48,209,88,.05));
-border:1px solid rgba(48,209,88,.3);border-radius:18px;display:flex;align-items:center;
-justify-content:center;margin:0 auto 18px;font-size:26px}
+  border:1px solid rgba(48,209,88,.3);border-radius:18px;display:flex;align-items:center;
+  justify-content:center;margin:0 auto 18px;font-size:26px}
 .pc-box h3{font-size:19px;font-weight:800;margin-bottom:8px}
-.pc-box p{font-size:13px;color:var(–muted);font-family:‘DM Mono’,monospace;line-height:1.65}
-.pc-close-btn{margin-top:22px;width:100%;background:var(–surface2);border:1px solid var(–border);
-border-radius:12px;padding:12px;color:var(–text);font-family:‘Syne’,sans-serif;font-size:14px;
-font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all .15s}
+.pc-box p{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;line-height:1.65}
+.pc-close-btn{margin-top:22px;width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;padding:12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;
+  font-weight:700;cursor:pointer;-webkit-appearance:none;transition:all .15s}
 .pc-close-btn:hover{background:rgba(255,255,255,.06)}
 
 /* History */
-.history-section{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);
-overflow:hidden;margin-top:16px;animation:fadeUp .8s ease both}
+.history-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;margin-top:16px;animation:fadeUp .8s ease both}
 .history-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;user-select:none}
-.history-header h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(–muted)}
-.history-chevron{color:var(–muted);font-size:12px;transition:transform .25s}
+.history-header h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted)}
+.history-chevron{color:var(--muted);font-size:12px;transition:transform .25s}
 .history-chevron.open{transform:rotate(180deg)}
-.history-body{display:none;border-top:1px solid var(–border)}
+.history-body{display:none;border-top:1px solid var(--border)}
 .history-body.open{display:block}
-.history-empty{padding:20px;text-align:center;font-size:13px;color:var(–muted);font-family:‘DM Mono’,monospace}
+.history-empty{padding:20px;text-align:center;font-size:13px;color:var(--muted);font-family:'DM Mono',monospace}
 .history-item{display:flex;align-items:center;gap:14px;padding:12px 20px;
-border-bottom:1px solid var(–border);transition:background .15s;cursor:pointer}
+  border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
 .history-item:last-child{border-bottom:none}
 .history-item:hover{background:rgba(255,255,255,.02)}
-.history-thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(–surface2)}
+.history-thumb{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--surface2)}
 .history-info{flex:1;min-width:0}
 .history-title-text{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.history-meta-text{font-size:11px;color:var(–muted);font-family:‘DM Mono’,monospace;margin-top:2px}
+.history-meta-text{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px}
 .history-reuse{flex-shrink:0;background:rgba(255,45,85,.1);border:1px solid rgba(255,45,85,.2);
-border-radius:8px;padding:5px 10px;color:var(–accent);font-family:‘Syne’,sans-serif;
-font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none;white-space:nowrap}
-.history-clear{display:block;width:100%;padding:12px;background:none;border:none;color:var(–muted);
-font-family:‘DM Mono’,monospace;font-size:12px;cursor:pointer;text-align:center;
-border-top:1px solid var(–border);transition:color .15s}
-.history-clear:hover{color:var(–accent)}
+  border-radius:8px;padding:5px 10px;color:var(--accent);font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:700;cursor:pointer;-webkit-appearance:none;white-space:nowrap}
+.history-clear{display:block;width:100%;padding:12px;background:none;border:none;color:var(--muted);
+  font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;text-align:center;
+  border-top:1px solid var(--border);transition:color .15s}
+.history-clear:hover{color:var(--accent)}
 
 /* Instructions */
-.instructions{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);
-padding:20px;margin-top:16px;animation:fadeUp .7s ease both}
-.instructions h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(–muted);margin-bottom:16px}
+.instructions{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin-top:16px;animation:fadeUp .7s ease both}
+.instructions h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:16px}
 .step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
 .step:last-child{margin-bottom:0}
 .step-num{flex-shrink:0;width:28px;height:28px;background:linear-gradient(135deg,#ff2d55,#ff6b00);
-border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white}
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white}
 .step-text{padding-top:3px}
 .step-text strong{display:block;font-size:14px;font-weight:700;margin-bottom:2px}
-.step-text p{font-size:13px;color:var(–muted);line-height:1.5;font-family:‘DM Mono’,monospace}
-.platform-note{margin-top:16px;padding:14px 16px;background:var(–surface2);border-radius:12px}
-.note-row{display:flex;gap:10px;font-size:12px;color:var(–muted);font-family:‘DM Mono’,monospace;
-margin-bottom:8px;line-height:1.5;align-items:flex-start}
+.step-text p{font-size:13px;color:var(--muted);line-height:1.5;font-family:'DM Mono',monospace}
+.platform-note{margin-top:16px;padding:14px 16px;background:var(--surface2);border-radius:12px}
+.note-row{display:flex;gap:10px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;
+  margin-bottom:8px;line-height:1.5;align-items:flex-start}
 .note-row:last-child{margin-bottom:0}
 .note-label{font-weight:700;color:rgba(255,255,255,.35);white-space:nowrap;flex-shrink:0}
 
@@ -311,12 +324,10 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
 @keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
-
 </head>
 <body>
 
 <!-- iOS Modal -->
-
 <div class="ios-modal" id="iosModal">
   <div class="ios-modal-header">
     <span class="ios-modal-title">Save to Photos</span>
@@ -347,7 +358,6 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
 </div>
 
 <!-- PC Overlay -->
-
 <div class="pc-overlay" id="pcOverlay">
   <div class="pc-box">
     <div class="pc-icon">✓</div>
@@ -368,8 +378,14 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
     <div class="version-badge">v5.0</div>
   </div>
 
-  <!-- Single video -->
+  <!-- Platform tabs -->
+  <div class="platform-tabs">
+    <button class="platform-tab active" id="tabTikTok" data-platform="tiktok">TikTok</button>
+    <button class="platform-tab" id="tabInstagram" data-platform="instagram">Instagram</button>
+  </div>
 
+<div id="tiktokPanel">
+  <!-- Single video -->
   <div class="card">
     <div class="card-label">Paste TikTok Link</div>
     <div class="input-row">
@@ -382,7 +398,6 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
   </div>
 
   <!-- Bulk download -->
-
   <div class="bulk-card">
     <div class="bulk-header">
       <div class="card-label" style="margin-bottom:0">Bulk Download</div>
@@ -396,7 +411,6 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
   </div>
 
   <!-- Queue -->
-
   <div class="queue-section" id="queueSection">
     <div class="queue-header">
       <div>
@@ -410,21 +424,18 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
   </div>
 
   <!-- Error -->
-
   <div class="error-box" id="errorBox">
     <p id="errorMsg"></p>
     <button class="retry-btn" id="retryBtn">↺ Try Again</button>
   </div>
 
   <!-- Loading -->
-
   <div class="status" id="status">
     <div class="spinner"></div>
     <p id="statusMsg">Fetching video info…</p>
   </div>
 
   <!-- Result -->
-
   <div class="result-card" id="resultCard">
     <div class="video-info">
       <div class="thumb-wrap" id="thumbWrap">
@@ -480,7 +491,6 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
   </div>
 
   <!-- History -->
-
   <div class="history-section" id="historySection" style="display:none">
     <div class="history-header" id="historyToggle">
       <h2>Download History</h2>
@@ -492,10 +502,84 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
       <button class="history-clear" id="historyClear">Clear history</button>
     </div>
   </div>
+</div><!-- /tiktokPanel -->
+
+<div id="instagramPanel" style="display:none">
+  <div class="ig-fragile-note">
+    ⚠ <strong>Unofficial method.</strong> Instagram has no public download API like TikTok does, so this scrapes public post pages through a rotating set of proxies. It works for public Reels/Posts most of the time, but can break without warning if Instagram changes its page format — and <strong>Stories can't be fetched at all</strong> (they require being logged in as a follower).
+  </div>
+
+  <!-- Single video -->
+  <div class="card">
+    <div class="card-label">Paste Instagram Link</div>
+    <div class="input-row">
+      <input type="url" class="url-input" id="igUrlInput" placeholder="https://www.instagram.com/reel/..."
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="paste-btn" id="igPasteBtn">Paste</button>
+    </div>
+    <div class="clipboard-hint" id="igClipboardHint"></div>
+    <button class="fetch-btn" id="igFetchBtn">Get Media ↓</button>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="igErrorBox">
+    <p id="igErrorMsg"></p>
+    <button class="retry-btn" id="igRetryBtn">↺ Try Again</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="status" id="igStatus">
+    <div class="spinner"></div>
+    <p id="igStatusMsg">Fetching post info…</p>
+  </div>
+
+  <!-- Result -->
+  <div class="result-card" id="igResultCard">
+    <div class="video-info">
+      <div class="thumb-wrap" id="igThumbWrap">
+        <img id="igThumbnail" src="" alt="">
+        <div class="thumb-overlay">
+          <div>
+            <div class="vid-title" id="igCaption"></div>
+            <div class="vid-author" id="igAuthor"></div>
+          </div>
+        </div>
+      </div>
+      <div class="pc-preview" id="igPcPreview">
+        <div class="pc-preview-label">Preview</div>
+        <video id="igPcPreviewVideo" controls playsinline preload="metadata"></video>
+      </div>
+      <div class="slideshow-wrap" id="igSlideshowWrap">
+        <div class="slideshow-label">Photos</div>
+        <div class="slides-grid" id="igSlidesGrid"></div>
+      </div>
+      <div class="download-section">
+        <div class="dl-label">Download</div>
+        <button class="dl-btn primary" id="igDlMain" disabled>
+          <div class="progress-bg" id="igMainProg"></div>
+          <div class="btn-content"><span id="igDlMainText">Download</span><span class="badge">MP4</span></div>
+        </button>
+        <div class="toast-bar" id="igToastBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-section" id="igHistorySection" style="display:none">
+    <div class="history-header" id="igHistoryToggle">
+      <h2>Download History</h2>
+      <span class="history-chevron" id="igHistoryChevron">▾</span>
+    </div>
+    <div class="history-body" id="igHistoryBody">
+      <div class="history-empty" id="igHistoryEmpty">No downloads yet</div>
+      <div id="igHistoryList"></div>
+      <button class="history-clear" id="igHistoryClear">Clear history</button>
+    </div>
+  </div>
+</div><!-- /instagramPanel -->
 
   <!-- Instructions -->
-
-  <div class="instructions">
+  <div class="instructions" id="tiktokInstructions">
     <h2>How to Use</h2>
     <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Single video</strong><p>Paste a TikTok link and tap "Get Video"</p></div></div>
     <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Bulk download</strong><p>Expand "Bulk Download", paste multiple links (one per line), tap "Add to Queue" then "Download ZIP"</p></div></div>
@@ -504,6 +588,18 @@ margin-bottom:8px;line-height:1.5;align-items:flex-start}
       <div class="note-row"><span class="note-label">📱 iPhone</span><span>Open in Safari · video player appears · hold → "Save to Photos"</span></div>
       <div class="note-row"><span class="note-label">💻 PC/Mac</span><span>Preview inline · auto-downloads with audio sync fixed</span></div>
       <div class="note-row"><span class="note-label">📦 Bulk ZIP</span><span>Each video fixed + named @author_title.mp4 inside the ZIP</span></div>
+    </div>
+  </div>
+
+  <div class="instructions" id="instagramInstructions" style="display:none">
+    <h2>How to Use</h2>
+    <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Reels &amp; posts</strong><p>Paste a public Reel or post link and tap "Get Media"</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Carousels</strong><p>Multi-photo posts show a grid — download each photo individually</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text"><strong>If it fails</strong><p>Tap "Try Again" — it cycles through several proxies, so a retry can succeed even if the first attempt didn't</p></div></div>
+    <div class="platform-note">
+      <div class="note-row"><span class="note-label">✅ Works on</span><span>Public Reels, public posts (photo/video/carousel)</span></div>
+      <div class="note-row"><span class="note-label">🚫 Won't work</span><span>Stories, private accounts, age-restricted or login-walled posts</span></div>
+      <div class="note-row"><span class="note-label">⚠ Reliability</span><span>Depends on free third-party proxies + Instagram's page format — can break without notice</span></div>
     </div>
   </div>
 
@@ -1389,10 +1485,410 @@ histToggle.addEventListener('click', () => {
   histChevron.classList.toggle('open', open);
 });
 
+/* ═══════════════════════════════════════════════════════════════════════
+   INSTAGRAM TAB
+   Unofficial method: Instagram has no CORS-enabled public API like tikwm.
+   We fetch the public embed page HTML through a rotating list of free
+   CORS proxies, then scrape the video/image URLs out of it. This is
+   inherently more fragile than the TikTok tab — any proxy can go down,
+   and Instagram can change its page format at any time.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Tab switching ── */
+const tabTikTok    = document.getElementById('tabTikTok');
+const tabInstagram = document.getElementById('tabInstagram');
+const tiktokPanel  = document.getElementById('tiktokPanel');
+const instagramPanel = document.getElementById('instagramPanel');
+const tiktokInstructions    = document.getElementById('tiktokInstructions');
+const instagramInstructions = document.getElementById('instagramInstructions');
+
+function switchPlatform(platform) {
+  const isTT = platform === 'tiktok';
+  tabTikTok.classList.toggle('active', isTT);
+  tabInstagram.classList.toggle('active', !isTT);
+  tiktokPanel.style.display    = isTT ? 'block' : 'none';
+  instagramPanel.style.display = isTT ? 'none'  : 'block';
+  tiktokInstructions.style.display    = isTT ? 'block' : 'none';
+  instagramInstructions.style.display = isTT ? 'none'  : 'block';
+}
+tabTikTok.addEventListener('click', () => switchPlatform('tiktok'));
+tabInstagram.addEventListener('click', () => switchPlatform('instagram'));
+
+/* ── DOM refs (Instagram) ── */
+const igUrlInput      = document.getElementById('igUrlInput');
+const igPasteBtn      = document.getElementById('igPasteBtn');
+const igClipboardHint = document.getElementById('igClipboardHint');
+const igFetchBtn      = document.getElementById('igFetchBtn');
+const igStatusEl      = document.getElementById('igStatus');
+const igStatusMsg     = document.getElementById('igStatusMsg');
+const igErrorBox      = document.getElementById('igErrorBox');
+const igErrorMsg      = document.getElementById('igErrorMsg');
+const igRetryBtn      = document.getElementById('igRetryBtn');
+const igResultCard    = document.getElementById('igResultCard');
+const igThumbWrap     = document.getElementById('igThumbWrap');
+const igThumbnail     = document.getElementById('igThumbnail');
+const igCaption       = document.getElementById('igCaption');
+const igAuthor        = document.getElementById('igAuthor');
+const igPcPreview     = document.getElementById('igPcPreview');
+const igPcPreviewVideo= document.getElementById('igPcPreviewVideo');
+const igSlideshowWrap = document.getElementById('igSlideshowWrap');
+const igSlidesGrid    = document.getElementById('igSlidesGrid');
+const igDlMain        = document.getElementById('igDlMain');
+const igDlMainText    = document.getElementById('igDlMainText');
+const igMainProg      = document.getElementById('igMainProg');
+const igToastBar      = document.getElementById('igToastBar');
+const igHistorySection= document.getElementById('igHistorySection');
+const igHistoryToggle = document.getElementById('igHistoryToggle');
+const igHistoryBody   = document.getElementById('igHistoryBody');
+const igHistoryChevron= document.getElementById('igHistoryChevron');
+const igHistoryList   = document.getElementById('igHistoryList');
+const igHistoryEmpty  = document.getElementById('igHistoryEmpty');
+const igHistoryClear  = document.getElementById('igHistoryClear');
+
+let igLastUrl = '';
+let igMediaUrl = '';    // current single video/photo URL to download
+let igMediaType = '';   // 'video' | 'image' | 'carousel'
+let igCaptionText = 'instagram-media';
+let igAuthorName = '';
+
+function igToast(msg, type='success') {
+  igToastBar.textContent = msg;
+  igToastBar.className = 'toast-bar ' + type;
+  show(igToastBar);
+}
+
+/* ── Clipboard auto-detect (Instagram) ── */
+async function igCheckClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text && text.includes('instagram.com')) {
+      if (!igUrlInput.value.trim()) {
+        igClipboardHint.textContent = '📋 Instagram link detected — tap to fill';
+        show(igClipboardHint);
+        igClipboardHint.onclick = () => { igUrlInput.value = text; hide(igClipboardHint); };
+      }
+    }
+  } catch {}
+}
+window.addEventListener('focus', igCheckClipboard);
+
+igPasteBtn.addEventListener('click', async () => {
+  try { igUrlInput.value = await navigator.clipboard.readText(); hide(igClipboardHint); }
+  catch { igUrlInput.focus(); try { document.execCommand('paste'); } catch {} }
+});
+igRetryBtn.addEventListener('click', () => {
+  hide(igErrorBox);
+  if (igLastUrl) { igUrlInput.value = igLastUrl; igDoFetch(); }
+});
+igFetchBtn.addEventListener('click', igDoFetch);
+igUrlInput.addEventListener('keydown', e => { if (e.key === 'Enter') igDoFetch(); });
+
+/* ── URL parsing ── */
+function parseInstagramUrl(url) {
+  const storyMatch = url.match(/instagram\.com\/stories\/([^\/\?]+)/i);
+  if (storyMatch) return { type: 'story', shortcode: null, username: storyMatch[1] };
+
+  const m = url.match(/instagram\.com\/(reel|reels|p|tv)\/([A-Za-z0-9_-]+)/i);
+  if (!m) return null;
+  return { type: (m[1] === 'reel' || m[1] === 'reels') ? 'reel' : (m[1] === 'tv' ? 'tv' : 'post'), shortcode: m[2] };
+}
+
+function unescapeIg(s) {
+  if (!s) return s;
+  return s.replace(/\\u0026/g, '&').replace(/\\\//g, '/').replace(/\\"/g, '"').replace(/\\n/g, ' ');
+}
+
+/* ── HTML → media extraction ──
+   Scrapes Instagram's embed-page HTML for video_url / display_url JSON
+   fields, falling back to og:video / og:image meta tags if the page
+   structure has changed. */
+function parseInstagramHTML(html) {
+  const result = { type: null, videoUrl: null, images: [], caption: '', username: '', thumbnail: '' };
+
+  const capMatch = html.match(/"edge_media_to_caption":\{"edges":\[\{"node":\{"text":"([^"]*)"/);
+  if (capMatch) result.caption = unescapeIg(capMatch[1]);
+
+  const userMatch = html.match(/"owner":\{[^}]*?"username":"([^"]+)"/);
+  if (userMatch) result.username = userMatch[1];
+
+  const vidMatch = html.match(/"video_url":"([^"]+)"/);
+  if (vidMatch) { result.type = 'video'; result.videoUrl = unescapeIg(vidMatch[1]); }
+
+  const displayMatches = [...html.matchAll(/"display_url":"([^"]+)"/g)].map(m => unescapeIg(m[1]));
+  if (displayMatches.length) {
+    result.thumbnail = displayMatches[0];
+    if (displayMatches.length > 1) {
+      result.type = result.type === 'video' ? result.type : 'carousel';
+      result.images = displayMatches;
+    }
+  }
+
+  if (!result.videoUrl) {
+    const ogVid = html.match(/<meta property="og:video" content="([^"]+)"/);
+    if (ogVid) { result.type = 'video'; result.videoUrl = unescapeIg(ogVid[1]); }
+  }
+  if (!result.thumbnail) {
+    const ogImg = html.match(/<meta property="og:image" content="([^"]+)"/);
+    if (ogImg) result.thumbnail = unescapeIg(ogImg[1]);
+  }
+  if (!result.caption) {
+    const ogDesc = html.match(/<meta property="og:description" content="([^"]*)"/);
+    if (ogDesc) result.caption = unescapeIg(ogDesc[1]);
+  }
+  if (!result.type && result.thumbnail) result.type = 'image';
+
+  return result;
+}
+
+/* ── CORS proxy chain ──
+   Instagram itself sends no Access-Control-Allow-Origin header, so a
+   browser can't fetch it directly. We route through a list of free,
+   no-key CORS proxies and use whichever responds first — if one is
+   down or rate-limited, the next is tried automatically. */
+const IG_PROXIES = [
+  target => `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
+  target => `https://corsproxy.io/?url=${encodeURIComponent(target)}`,
+  target => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`,
+];
+
+async function igFetchViaProxies(targetUrl) {
+  let lastErr = null;
+  for (const buildProxyUrl of IG_PROXIES) {
+    try {
+      const res = await fetch(buildProxyUrl(targetUrl));
+      if (!res.ok) { lastErr = new Error('HTTP ' + res.status); continue; }
+      const text = await res.text();
+      if (!text || text.length < 200) { lastErr = new Error('Empty response'); continue; }
+      return text;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('All proxies failed');
+}
+
+async function fetchInstagramMeta(url) {
+  const parsed = parseInstagramUrl(url);
+  if (!parsed) throw new Error("This doesn't look like an Instagram link.");
+  if (parsed.type === 'story') {
+    throw new Error('Stories require being logged in as a follower to view — this tool can only reach public content, so Stories can\u2019t be fetched.');
+  }
+  const embedPath = parsed.type === 'reel' ? 'reel' : (parsed.type === 'tv' ? 'tv' : 'p');
+  const embedUrl = `https://www.instagram.com/${embedPath}/${parsed.shortcode}/embed/captioned/`;
+
+  const html = await igFetchViaProxies(embedUrl);
+  const meta = parseInstagramHTML(html);
+
+  if (!meta.videoUrl && meta.images.length === 0 && !meta.thumbnail) {
+    throw new Error('Could not read this post — it may be private, age-restricted, or Instagram changed its page format.');
+  }
+  return meta;
+}
+
+async function igDoFetch() {
+  const url = igUrlInput.value.trim();
+  if (!url) { igShowErr('Please paste an Instagram link first.'); return; }
+  if (!url.includes('instagram.com')) { igShowErr("This doesn't look like an Instagram link."); return; }
+
+  igLastUrl = url;
+  hide(igErrorBox); hide(igResultCard); hide(igToastBar);
+  show(igStatusEl); igStatusMsg.textContent = 'Fetching post info…';
+  igFetchBtn.disabled = true;
+  igDlMain.disabled = true;
+
+  try {
+    const meta = await fetchInstagramMeta(url);
+    igPopulateResult(url, meta);
+    igSaveHistory({ url, caption: meta.caption || 'Instagram media', author: meta.username, thumbnail: meta.thumbnail, date: Date.now(), type: meta.type });
+    igRenderHistory();
+  } catch (err) {
+    hide(igStatusEl);
+    igShowErr(err.message || 'Failed to fetch. Please try again — the free proxies this relies on can be flaky.');
+  }
+  igFetchBtn.disabled = false;
+}
+
+function igShowErr(msg) { igErrorMsg.textContent = msg; show(igErrorBox); }
+
+function igPopulateResult(url, meta) {
+  igCaptionText = (meta.caption || 'instagram-media').slice(0, 60).replace(/[^\w\s-]/g, '').trim() || 'instagram-media';
+  igAuthorName = meta.username || '';
+  igMediaType = meta.type;
+
+  igCaption.textContent = meta.caption ? (meta.caption.length > 80 ? meta.caption.slice(0, 80) + '…' : meta.caption) : 'Instagram Media';
+  igAuthor.textContent = '@' + (igAuthorName || 'unknown');
+  igThumbnail.src = meta.thumbnail || '';
+
+  if (meta.type === 'carousel') {
+    igThumbWrap.style.maxHeight = '120px';
+    igBuildSlideshowGrid(meta.images);
+    show(igSlideshowWrap); hide(igPcPreview);
+    hide(igDlMain);
+    igMediaUrl = '';
+  } else if (meta.type === 'video') {
+    igThumbWrap.style.maxHeight = '300px';
+    hide(igSlideshowWrap); show(igDlMain);
+    igMediaUrl = meta.videoUrl;
+    if (!isIOS) { igPcPreviewVideo.src = meta.videoUrl; show(igPcPreview); } else { hide(igPcPreview); }
+    igDlMainText.textContent = (isIOS ? '📲  Save Video to Photos' : '⬇  Download Video');
+    igDlMain.disabled = !igMediaUrl;
+  } else { // single image
+    igThumbWrap.style.maxHeight = '300px';
+    hide(igSlideshowWrap); hide(igPcPreview); show(igDlMain);
+    igMediaUrl = meta.thumbnail;
+    igDlMainText.textContent = (isIOS ? '📲  Save Photo to Photos' : '⬇  Download Photo');
+    igDlMain.disabled = !igMediaUrl;
+  }
+
+  hide(igStatusEl); show(igResultCard);
+  igToast(isIOS ? '✓ Ready — tap above to save' : '✓ Ready — tap to download', isIOS ? 'info' : 'success');
+  igResultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function igBuildSlideshowGrid(images) {
+  igSlidesGrid.innerHTML = '';
+  images.forEach((src, i) => {
+    const item = document.createElement('div');
+    item.className = 'slide-item';
+    item.innerHTML = `<img src="${escHtml(src)}" alt="Photo ${i+1}" loading="lazy">
+      <button class="slide-dl-btn">↓</button>`;
+    item.querySelector('.slide-dl-btn').onclick = e => { e.stopPropagation(); igDownloadImage(src, i+1); };
+    igSlidesGrid.appendChild(item);
+  });
+}
+
+async function igDownloadImage(src, index) {
+  try {
+    const blob = await (await fetch(src, { mode: 'cors' })).blob();
+    const ext = blob.type.includes('png') ? 'png' : 'jpg';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (igAuthorName ? `@${igAuthorName}_` : '') + `${igCaptionText}_${index}.${ext}`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch { window.open(src, '_blank'); igToast('⚠ Browser blocked the direct fetch — opened the image in a new tab, long-press to save', 'warn'); }
+}
+
+/* ── Download (video or single photo) ──
+   No audio-sync fix needed here (that hack was specific to TikTok's
+   encoding). Falls back to opening the raw CDN URL if a CORS-blocked
+   fetch prevents grabbing it as a blob. */
+igDlMain.addEventListener('click', () => igStartDownload(igMediaUrl, igMediaType, igMainProg, igDlMain));
+
+async function igStartDownload(url, type, progressEl, btn) {
+  if (!url) return;
+  const isVideo = type === 'video';
+  const ext = isVideo ? 'mp4' : 'jpg';
+  const mime = isVideo ? 'video/mp4' : 'image/jpeg';
+  const prefix = igAuthorName ? `@${igAuthorName}_` : '';
+  const fname = `${prefix}${igCaptionText}.${ext}`;
+
+  if (isIOS) {
+    btn.disabled = true;
+    iosLoading.style.display = 'flex'; iosReady.style.display = 'none';
+    iosModal.classList.add('open'); document.body.style.overflow = 'hidden';
+    currentBlob = null;
+    try {
+      iosLoadMsg.textContent = isVideo ? 'Downloading video…' : 'Downloading photo…';
+      iosLoadFill.style.width = '5%';
+      const res = await fetch(url, { mode: 'cors' });
+      const reader = res.body.getReader();
+      const chunks = []; let loaded = 0;
+      const contentLength = +res.headers.get('content-length') || 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value); loaded += value.length;
+        const pct = contentLength ? Math.min(95, (loaded/contentLength)*100) : Math.min(85, 5+loaded/70000);
+        iosLoadFill.style.width = pct + '%';
+      }
+      currentBlob = new Blob(chunks, { type: mime });
+      iosVideo.src = URL.createObjectURL(currentBlob);
+      if (isVideo) { iosVideo.load(); iosVideo.play().catch(() => {}); }
+      iosLoading.style.display = 'none'; iosReady.style.display = 'flex';
+    } catch (err) {
+      iosVideo.src = url; iosVideo.load(); if (isVideo) iosVideo.play().catch(() => {});
+      iosLoading.style.display = 'none'; iosReady.style.display = 'flex';
+    }
+    btn.disabled = false;
+  } else {
+    btn.disabled = true; setBarWidth(progressEl, 5);
+    try {
+      const res = await fetch(url, { mode: 'cors' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const reader = res.body.getReader();
+      const chunks = []; let loaded = 0;
+      const contentLength = +res.headers.get('content-length') || 0;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value); loaded += value.length;
+        const pct = contentLength ? Math.min(95, (loaded/contentLength)*100) : Math.min(85, 5+loaded/70000);
+        setBarWidth(progressEl, pct);
+      }
+      const blob = new Blob(chunks, { type: mime });
+      setBarWidth(progressEl, 100);
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl; a.download = fname;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+      pcOverlay.classList.add('open');
+    } catch (err) {
+      window.open(url, '_blank');
+      igToast('⚠ Browser blocked the direct download (Instagram\u2019s CDN can refuse cross-site fetches) — opened it in a new tab, right-click → "Save As"', 'warn');
+    }
+    setTimeout(() => { setBarWidth(progressEl, 0); btn.disabled = false; }, 900);
+  }
+}
+
+/* ── Instagram download history (separate localStorage key) ── */
+const IG_HISTORY_KEY = 'tiksave_ig_history';
+const IG_HISTORY_MAX = 20;
+
+function igLoadHistory() {
+  try { return JSON.parse(localStorage.getItem(IG_HISTORY_KEY)) || []; } catch { return []; }
+}
+function igSaveHistory(entry) {
+  let h = igLoadHistory().filter(e => e.url !== entry.url);
+  h.unshift(entry);
+  if (h.length > IG_HISTORY_MAX) h = h.slice(0, IG_HISTORY_MAX);
+  try { localStorage.setItem(IG_HISTORY_KEY, JSON.stringify(h)); } catch {}
+}
+function igRenderHistory() {
+  const h = igLoadHistory();
+  if (h.length === 0) { hide(igHistorySection); return; }
+  show(igHistorySection);
+  igHistoryEmpty.style.display = h.length === 0 ? 'block' : 'none';
+  igHistoryList.innerHTML = '';
+  h.forEach(entry => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    const ago = timeAgo(entry.date);
+    div.innerHTML = `
+      <img class="history-thumb" src="${escHtml(entry.thumbnail||'')}" alt="" loading="lazy">
+      <div class="history-info">
+        <div class="history-title-text">${escHtml(entry.caption)}</div>
+        <div class="history-meta-text">@${escHtml(entry.author||'unknown')} · ${ago}${entry.type==='carousel'?' · 🖼':''}</div>
+      </div>
+      <button class="history-reuse">↺ Load</button>`;
+    div.querySelector('.history-reuse').onclick = () => {
+      igUrlInput.value = entry.url;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(igDoFetch, 300);
+    };
+    igHistoryList.appendChild(div);
+  });
+}
+igHistoryClear.addEventListener('click', () => { localStorage.removeItem(IG_HISTORY_KEY); igRenderHistory(); });
+igHistoryToggle.addEventListener('click', () => {
+  const open = igHistoryBody.classList.toggle('open');
+  igHistoryChevron.classList.toggle('open', open);
+});
+
 /* Init */
 renderHistory();
+igRenderHistory();
 setTimeout(checkClipboard, 800);
+setTimeout(igCheckClipboard, 800);
 </script>
-
 </body>
 </html>
