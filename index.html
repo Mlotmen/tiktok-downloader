@@ -1647,7 +1647,7 @@ function parseInstagramHTML(html) {
    more reliable than the shared public proxies, since it's not rate
    limited by anyone else's traffic. The public proxies remain as a
    fallback chain if your own relay isn't set or fails. */
-const IG_OWN_API = ''; // e.g. 'https://tiksave-ig.YOURNAME.workers.dev' — leave blank to skip
+const IG_OWN_API = 'https://tiksave.michal-matuszewski14.workers.dev/'; // e.g. 'https://tiksave-ig.YOURNAME.workers.dev' — leave blank to skip
 
 const IG_PROXY_SOURCES = [
   ...(IG_OWN_API ? [{ name: 'your own relay', build: t => `${IG_OWN_API}?url=${encodeURIComponent(t)}` }] : []),
