@@ -583,6 +583,29 @@ function raceWithTimeout(promise, ms, message) {
    tripping that limit and recovering, funnel every lookup through a gate that
    spaces calls out — bulk queues then run at full speed without ever failing.
    The retry below stays as a safety net for limits we didn't cause. */
+/* Same service, two edges. Verified 2026-08-15: both return JSON with
+   Access-Control-Allow-Origin: *. Every other public TikTok API tested either
+   sends no CORS header (tikmate) or is dead (tiklydown, douyin.wtf), so these
+   two are genuinely the whole field for a static, browser-only page. */
+const TIKWM_HOSTS = ['https://www.tikwm.com/api/', 'https://tikwm.com/api/'];
+
+/* A 403 here is not an outage — it is the CDN edge refusing this specific
+   visitor. Say so, because the useful actions (wait, switch network, drop the
+   VPN) are completely different from those for a service that is down. */
+function blockedLookupMessage(status) {
+  if (status === 403) {
+    return 'The lookup service refused the request (HTTP 403).\n\n' +
+           'This blocks your connection, not the app — it usually clears on its own. Try, in order:\n' +
+           '• Wait a minute and tap Try Again\n' +
+           '• Switch network (Wi-Fi → mobile data, or the reverse)\n' +
+           '• Turn off any VPN or ad-blocker, then reload';
+  }
+  if (status === 429) return 'Too many requests were sent to the lookup service. Wait about a minute, then tap Try Again.';
+  if (status >= 500)  return `The lookup service is having problems (HTTP ${status}). This is on their end — try again in a few minutes.`;
+  if (status === 0)   return 'Could not reach the lookup service. Check your connection and tap Try Again.';
+  return `The lookup service returned HTTP ${status}. Try again shortly.`;
+}
+
 const TIKWM_MIN_GAP = 1100;
 let tikwmChain = Promise.resolve();
 let tikwmLast = 0;
@@ -788,12 +811,37 @@ async function doFetch() {
 
 async function fetchTikTokMeta(url, attempt = 0) {
   const target = normalizeTikTokUrl(url);
-  await tikwmGate();
-  const res = await fetchWithTimeout(
-    `https://www.tikwm.com/api/?url=${encodeURIComponent(target)}&hd=1`,
-    {}, NET.meta, 'video lookup'
-  );
-  if (!res.ok) throw new Error(`The lookup service returned HTTP ${res.status}. It may be temporarily down \u2014 try again shortly.`);
+
+  /* The service answers on two hostnames that sit behind different edge
+     configs. A 403 is the edge blocking *this visitor* (bot heuristics after
+     heavy use, a shared/VPN IP, some ISPs) rather than an outage \u2014 the other
+     host often still answers, so try both before giving up. */
+  let res = null, lastStatus = 0;
+  for (const host of TIKWM_HOSTS) {
+    await tikwmGate();
+    try {
+      const r = await fetchWithTimeout(
+        `${host}?url=${encodeURIComponent(target)}&hd=1`, {}, NET.meta, 'video lookup'
+      );
+      if (r.ok) { res = r; break; }
+      lastStatus = r.status;
+      /* 403/429 are per-visitor blocks; 5xx is the service itself. Both are
+         worth trying the sibling host for. Anything else is a real answer. */
+      if (![403, 429, 500, 502, 503, 504].includes(r.status)) { res = r; break; }
+    } catch (err) {
+      if (err.name === 'TimeoutError' && host === TIKWM_HOSTS[TIKWM_HOSTS.length - 1]) throw err;
+      lastStatus = 0;
+    }
+  }
+
+  if (!res) throw new Error(blockedLookupMessage(lastStatus));
+  if (!res.ok) {
+    if (res.status === 403 && attempt < 2) {
+      await sleep(1500 * (attempt + 1));
+      return fetchTikTokMeta(url, attempt + 1);
+    }
+    throw new Error(blockedLookupMessage(res.status));
+  }
 
   let data;
   try { data = await res.json(); }
